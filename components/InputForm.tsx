@@ -13,7 +13,7 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading }) => {
     coreConcept: '',
     brandName: '',
     brandVoice: 'Professional & Authoritative',
-    keyFeatures: [''],
+    keyFeatures: ['Core functionality feature'],
     primaryCTA: 'Get Started',
     framerTemplateUrl: '',
     goal: 'GENERATE_REPLICA',
@@ -36,7 +36,11 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading }) => {
 
   const removeFeature = (index: number) => {
     const newFeatures = formData.keyFeatures.filter((_, i) => i !== index);
-    setFormData((prev) => ({ ...prev, keyFeatures: newFeatures }));
+    if (newFeatures.length === 0) {
+      setFormData((prev) => ({ ...prev, keyFeatures: ['Core functionality feature'] }));
+    } else {
+      setFormData((prev) => ({ ...prev, keyFeatures: newFeatures }));
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -165,8 +169,7 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading }) => {
                 <button
                   type="button"
                   onClick={() => removeFeature(index)}
-                  className="p-2 text-slate-400 hover:text-red-500 transition disabled:opacity-50"
-                  disabled={formData.keyFeatures.length === 1}
+                  className="p-2 text-slate-400 hover:text-red-500 transition"
                 >
                   <Trash2 className="w-5 h-5" />
                 </button>
