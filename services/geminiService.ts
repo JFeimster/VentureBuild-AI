@@ -166,3 +166,45 @@ export const generateVentureBuild = async (data: FormData): Promise<ApiResponse>
     throw error;
   }
 };
+
+export const generateProjectBrief = async (seedConcept?: string): Promise<Partial<FormData>> => {
+  const apiKey = process.env.API_KEY;
+  if (!apiKey) {
+    throw new Error("API Key not found in environment variables.");
+  }
+
+  const ai = new GoogleGenAI({ apiKey });
+
+  const prompt = `You are a creative venture builder helper.
+  ${seedConcept ? `The user has this initial concept: "${seedConcept}". Expand this into a full project brief.` : `Generate a unique, innovative, and viable tech startup concept.`}
+
+  Output a JSON object with the following fields to help the user fill out their project brief form:
+  - projectName: A catchy name for the project.
+  - brandName: A short, memorable brand name (often same as project name).
+  - coreConcept: A compelling 2-3 sentence value proposition and description.
+  - brandVoice: One of ['Professional & Authoritative', 'Friendly & Approachable', 'Playful & Energetic', 'Minimalist & Clean', 'Luxury & Exclusive', 'Tech-Forward & Innovative'].
+  - keyFeatures: An array of 3-5 distinct feature names.
+  - primaryCTA: A strong call to action text (e.g., "Start Free Trial", "Get Early Access").
+
+  Do not output markdown code blocks. Just the JSON.`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+      },
+    });
+
+    const text = response.text;
+    if (!text) {
+      throw new Error("No response received from AI.");
+    }
+
+    return JSON.parse(text) as Partial<FormData>;
+  } catch (error) {
+    console.error("Error generating project brief:", error);
+    throw error;
+  }
+};

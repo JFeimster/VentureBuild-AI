@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Plus, Trash2, Rocket, FileText, Sparkles, Wand2 } from 'lucide-react';
+import { Plus, Trash2, Rocket, FileText, Sparkles, Wand2, Loader2 } from 'lucide-react';
 import { FormData } from '../types';
+import { generateProjectBrief } from '../services/geminiService';
 
 interface InputFormProps {
   onSubmit: (data: FormData) => void;
@@ -8,6 +9,7 @@ interface InputFormProps {
 }
 
 const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading }) => {
+  const [isAutoFilling, setIsAutoFilling] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     projectName: '',
     coreConcept: '',
@@ -48,17 +50,28 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading }) => {
     onSubmit(formData);
   };
 
-  const handleAutoFill = () => {
-    setFormData({
-      projectName: 'Lumina Health',
-      coreConcept: 'An AI-powered mental wellness platform that provides personalized daily affirmations, mood tracking, and guided meditations tailored to your emotional state.',
-      brandName: 'Lumina',
-      brandVoice: 'Friendly & Approachable',
-      keyFeatures: ['Daily Mood Check-ins', 'AI-Generated Meditations', 'Progress Analytics'],
-      primaryCTA: 'Start Your Journey',
-      framerTemplateUrl: 'https://framer.com/templates/focus',
-      goal: 'GENERATE_REPLICA',
-    });
+  const handleSmartFill = async () => {
+    setIsAutoFilling(true);
+    try {
+      const seed = formData.coreConcept.trim().length > 3 ? formData.coreConcept : undefined;
+      const generatedData = await generateProjectBrief(seed);
+      
+      setFormData((prev) => ({
+        ...prev,
+        ...generatedData,
+        // Ensure we have at least one feature
+        keyFeatures: generatedData.keyFeatures && generatedData.keyFeatures.length > 0 
+          ? generatedData.keyFeatures 
+          : ['Core functionality feature'],
+        // Set default template if none exists
+        framerTemplateUrl: prev.framerTemplateUrl || 'https://framer.com/templates/focus',
+      }));
+    } catch (error) {
+      console.error("Failed to autofill", error);
+      alert("Failed to generate brief. Please check your connection and try again.");
+    } finally {
+      setIsAutoFilling(false);
+    }
   };
 
   return (
@@ -73,11 +86,13 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading }) => {
         </div>
         <button
           type="button"
-          onClick={handleAutoFill}
-          className="text-xs font-medium text-indigo-300 hover:text-white flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-indigo-900/50 hover:bg-white/10 transition"
+          onClick={handleSmartFill}
+          disabled={isAutoFilling || isLoading}
+          className="text-xs font-medium text-indigo-300 hover:text-white flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-indigo-900/50 hover:bg-white/10 transition disabled:opacity-50 disabled:cursor-not-allowed"
+          title={formData.coreConcept.length > 3 ? "Generate details based on your concept" : "Generate a random startup idea"}
         >
-          <Wand2 className="w-3.5 h-3.5" />
-          Auto-fill Example
+          {isAutoFilling ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Wand2 className="w-3.5 h-3.5" />}
+          {formData.coreConcept.length > 3 ? 'Smart Complete' : 'Magic Auto-fill'}
         </button>
       </div>
       

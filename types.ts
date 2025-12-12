@@ -136,3 +136,11 @@ export interface AssistantOutput {
 export interface ApiResponse {
   assistantOutput: AssistantOutput;
 }
+
+export interface SavedProject {
+  id: string;
+  name: string;
+  date: string;
+  data: ApiResponse;
+  type: OutputType;
+}

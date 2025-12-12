@@ -1,12 +1,17 @@
 import React from 'react';
-import { Copy, ExternalLink, Palette, Type, Image as ImageIcon, MessageSquare, Tag, Check, MousePointerClick } from 'lucide-react';
+import { Copy, ExternalLink, Palette, Type, Image as ImageIcon, MessageSquare, Tag, Check, MousePointerClick, Download } from 'lucide-react';
 import { AutomatedBuildPackage } from '../types';
 
 interface BuildPackageViewProps {
   data: AutomatedBuildPackage;
+  onExport: () => void;
 }
 
-const BuildPackageView: React.FC<BuildPackageViewProps> = ({ data }) => {
+const BuildPackageView: React.FC<BuildPackageViewProps> = ({ data, onExport }) => {
+  const handleCopy = (text: string) => {
+    navigator.clipboard.writeText(text);
+  };
+
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       {/* Hero Action */}
@@ -15,15 +20,24 @@ const BuildPackageView: React.FC<BuildPackageViewProps> = ({ data }) => {
           <h2 className="text-2xl font-bold mb-2">Automated Build Package Ready</h2>
           <p className="text-indigo-100">Your site replica strategy and assets have been generated.</p>
         </div>
-        <a 
-          href={data.coreProjectFile.framerRemixLink} 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="bg-white text-indigo-600 hover:bg-indigo-50 px-6 py-3 rounded-lg font-bold flex items-center gap-2 transition shadow-lg whitespace-nowrap"
-        >
-          <ExternalLink className="w-5 h-5" />
-          Open Remix Link
-        </a>
+        <div className="flex flex-col sm:flex-row gap-4">
+          <button 
+            onClick={onExport}
+            className="bg-indigo-700/50 hover:bg-indigo-700 text-white border border-white/10 px-6 py-3 rounded-lg font-bold flex items-center justify-center gap-2 transition shadow-lg whitespace-nowrap backdrop-blur-sm"
+          >
+            <Download className="w-5 h-5" />
+            Download Code
+          </button>
+          <a 
+            href={data.coreProjectFile.framerRemixLink} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="bg-white text-indigo-600 hover:bg-indigo-50 px-6 py-3 rounded-lg font-bold flex items-center justify-center gap-2 transition shadow-lg whitespace-nowrap"
+          >
+            <ExternalLink className="w-5 h-5" />
+            Open Remix Link
+          </a>
+        </div>
       </div>
 
       {/* Brand Assets */}
@@ -158,18 +172,25 @@ const BuildPackageView: React.FC<BuildPackageViewProps> = ({ data }) => {
        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
           <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
             <ImageIcon className="w-5 h-5 text-indigo-500" />
-            Image Creative Briefs
+            Image Generation Briefs
           </h3>
           <div className="space-y-4">
             {data.preliminaryBrandAssetPack.imageAndIconBriefs.map((img, idx) => (
-              <div key={idx} className="flex gap-4 p-4 bg-slate-50 rounded-lg border border-slate-100">
+              <div key={idx} className="flex gap-4 p-4 bg-slate-50 rounded-lg border border-slate-100 group relative">
                 <div className="shrink-0 w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-bold text-sm">
                   {idx + 1}
                 </div>
-                <div>
+                <div className="flex-1 pr-8">
                   <h5 className="font-bold text-slate-900 text-sm mb-1">{img.section}</h5>
-                  <p className="text-slate-600 italic">"{img.brief}"</p>
+                  <p className="text-slate-600 italic font-mono text-sm bg-white p-2 rounded border border-slate-100">"{img.brief}"</p>
                 </div>
+                <button 
+                  onClick={() => handleCopy(img.brief)}
+                  className="absolute top-4 right-4 text-slate-300 hover:text-indigo-600 transition"
+                  title="Copy Prompt"
+                >
+                  <Copy className="w-4 h-4" />
+                </button>
               </div>
             ))}
           </div>
