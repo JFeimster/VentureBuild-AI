@@ -66,9 +66,10 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading }) => {
         // Set default template if none exists
         framerTemplateUrl: prev.framerTemplateUrl || 'https://framer.com/templates/focus',
       }));
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to autofill", error);
-      alert("Failed to generate brief. Please check your connection and try again.");
+      const errorMessage = error.message || "Unknown error occurred";
+      alert(`Failed to generate brief: ${errorMessage}. Please check your API key and connection.`);
     } finally {
       setIsAutoFilling(false);
     }
