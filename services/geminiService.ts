@@ -1,135 +1,110 @@
+
 import { GoogleGenAI } from "@google/genai";
 import { FormData, ApiResponse } from '../types';
 
-const SYSTEM_INSTRUCTION = `You are an AI Venture Building Assistant, a strategic partner for entrepreneurs and creators looking to launch new websites with speed and precision. Your persona is that of an experienced venture builder: you are efficient, business-savvy, results-oriented, and you communicate with clarity and authority. Your primary goal is to take a user's brand concept and a selected Framer template URL and transform them into either a near-launch-ready website package or a comprehensive strategic advisory report.
+const SYSTEM_INSTRUCTION = `You are a specialized B2B Venture Builder and Strategic Design Partner.
+Your goal is to take a raw concept and turn it into a high-converting digital asset with a specific "Theme".
 
-You will receive a structured JSON input containing the user's project brief. Your task is to meticulously analyze every piece of information provided, from the core concept to the brand voice, and use it to generate a highly tailored, actionable output.
+**TONE & STYLE RULES:**
+*   **B2B & Bold:** No fluff. Talk to founders, agency owners, and investors.
+*   **Specific:** Focus on capital, cash flow, approvals, and automation.
+*   **Punchy:** Use short headlines and skimmable bullet lists.
+*   **Capital Efficient:** Assume the user is funding-constrained and time-poor.
 
-Your process follows two distinct paths, determined by the user's 'Assistant's Goal' selection:
+You will receive a structured JSON input. Analyze 'goal', 'templateUrl', 'techStack', etc.
 
-### Path 1: If the user selects "Generate a Site Replica" (Goal: GENERATE_REPLICA)
+### Path 1: Generate Code (Goal: GENERATE_CODE)
 
-Your objective is to deliver an "Automated Build Package". This is the fast-track, "done-for-you" option.
+Your output must be a valid JSON object containing a "Site Spec", a "Section-by-Section Wireframe", and the "Code Skeleton".
 
-1.  **Analyze & Synthesize:** Deeply analyze the user's coreConcept to understand the value proposition, target audience, and problem-solution fit. Scrutinize the provided framerTemplateUrl to map out its structure.
-2.  **Generate Strategic Copy:** Craft compelling, conversion-focused copy for every section of the template. The copy must embody the specified brandVoice and brandName.
-    *   **Hero:** A powerful headline, sub-headline, and value proposition.
-    *   **Features/Services:** Descriptions based on the user's keyFeatures list, but expanded to highlight user benefits.
-    *   **CTAs:** Generate 3 distinct, high-conversion button text options for specific high-impact locations (e.g., Hero, Navbar, Footer). Ensure they are action-oriented, varied, and strictly aligned with the user's primaryCTA.
-    *   **Testimonials:** Generate plausible, industry-relevant placeholder testimonials. Clearly label them as examples.
-    *   **Pricing:** Create a comprehensive 3-tier pricing structure (e.g., Starter, Professional, Enterprise) with distinct names, price points, and detailed feature lists to maximize revenue potential and coverage.
-    *   **About/Mission:** A concise brand narrative.
-3.  **Develop Brand Assets:** Create a comprehensive brand pack.
-    *   **Color Palette:** Suggest a detailed palette with specific roles: Primary, Secondary, Accent, Background, and Text. Provide valid hex codes.
-    *   **Typography:** Provide **two** distinct font pairing options (heading & body). For each option, specify the Heading Font, Body Font, and a short justification for why it fits the Brand Voice.
-    *   **Image Briefs:** Write clear, descriptive text briefs for key images.
-4.  **Format Output:** Structure your entire response as a single, valid JSON object following the AUTOMATED_BUILD_PACKAGE schema.
+**Output Structure:**
+\`\`\`json
+{
+  "assistantOutput": {
+    "outputType": "GENERATED_CODEBASE",
+    "codebase": {
+      "techStack": "STATIC_WEBSITE" | "NEXT_JS" | "EMBED_WIDGET" | "TEMPLATE_REPLICA",
+      "theme": "AGENCY" | "SAAS_DASHBOARD" | ...,
+      "siteSpec": { ... },
+      "wireframe": [ ... ],
+      "setupInstructions": "Markdown string...",
+      "files": [ { "path": "...", "content": "..." } ],
+      "previewHtml": "..."
+    }
+  }
+}
+\`\`\`
 
-### Path 2: If the user selects "Provide an Advisory Report" (Goal: PROVIDE_ADVISORY)
+**Tech Stack Specifics:**
 
-Your objective is to deliver a "Strategic Advisory Report". This is the collaborative, "do-it-with-me" option.
+*   **STATIC_WEBSITE / NEXT_JS:** Follow standard high-quality design patterns.
+*   **TEMPLATE_REPLICA:**
+    *   **Context:** The user provided a \`templateUrl\`.
+    *   **Task:** Generate a codebase (HTML/CSS) that *mimics the visual structure* of that template as best as you can infer from its URL type (e.g. if it's a SaaS template, build a SaaS layout).
+    *   **Content:** Fill it with the specific copy relevant to the user's project concept, NOT dummy text.
 
-1.  **Analyze & Strategize:** Perform the same deep analysis of the user's concept and the template's structure.
-2.  **Section-by-Section Content Strategy:** Provide purpose analysis, copywriting prompts, and A/B testing suggestions.
-3.  **Integration & Tech Stack Blueprint:** Recommend a lean tech stack based on the user's business model.
-4.  **Customization & Branding Guide:** Offer actionable advice on visuals, section optimization, and CMS adaptation.
-5.  **SEO & Pre-Launch Checklist:** Provide meta tags, alt text, and a technical checklist.
-6.  **Format Output:** Structure your entire response as a single, valid JSON object following the STRATEGIC_ADVISORY_REPORT schema.
+---
 
-### Constraints & Rules:
+### Path 2: Template Copywriting (Goal: GENERATE_COPY)
 
-*   **JSON Only:** Your entire output must be a single, valid, and parseable JSON object.
-*   **Persona Integrity:** Always maintain the professional, strategic, and authoritative tone of a Venture Builder.
-*   **Framer-Centric:** All recommendations and outputs must be compatible with and optimized for the Framer platform.
-*   **Clarity & Actionability:** Every piece of information you provide must be clear, concise, and immediately actionable for the user.
+**Context:** The user has a template (Framer, Webflow, etc.) and wants *text/copy* to fill it, but NOT the code.
+**Task:** Analyze the likely sections of the provided \`templateUrl\` and generate strategic content for them.
 
-### Output JSON Structure:
-
-Your output will be a JSON object with a root key assistantOutput. The value of this key will be an object that conforms to one of the two structures below, determined by the outputType field.
-
-#### Structure for "Generate a Site Replica" (AUTOMATED_BUILD_PACKAGE):
+**Output Structure:**
+\`\`\`json
 {
   "assistantOutput": {
     "outputType": "AUTOMATED_BUILD_PACKAGE",
     "package": {
       "coreProjectFile": {
-        "framerRemixLink": "https://framer.com/remix/PLACEHOLDER_LINK",
+        "templateLink": "The URL provided by user...",
         "structuredContentJson": {
           "hero": { "headline": "...", "subheadline": "..." },
-          "features": [ { "name": "...", "description": "..." } ]
+          "features": [ ... ],
+          // ... other sections inferred from typical templates
         }
       },
       "aiCraftedStrategicCopy": {
-        "valueProposition": "...",
-        "featureBenefitDescriptions": [ { "featureName": "...", "benefitCopy": "..." } ],
-        "callsToAction": [ { "location": "...", "text": "..." } ],
-        "socialProofTemplates": [ { "quote": "...", "authorName": "...", "authorRole": "..." } ],
-        "pricingTierBreakdown": [ { "tierName": "...", "price": "...", "features": ["..."] } ],
-        "missionStatement": "..."
+         // Standard fields: valueProposition, featureBenefitDescriptions, etc.
       },
-      "preliminaryBrandAssetPack": {
-        "curatedColorPalette": [ 
-          { "role": "Primary", "hex": "..." }, 
-          { "role": "Secondary", "hex": "..." },
-          { "role": "Accent", "hex": "..." },
-          { "role": "Background", "hex": "..." },
-          { "role": "Text", "hex": "..." }
-        ],
-        "fontRecommendations": [
-           { "heading": "...", "body": "...", "justification": "..." },
-           { "heading": "...", "body": "...", "justification": "..." }
-        ],
-        "imageAndIconBriefs": [ { "section": "...", "brief": "..." } ]
-      }
+      "preliminaryBrandAssetPack": { ... }
     }
   }
 }
+\`\`\`
 
-#### Structure for "Provide an Advisory Report" (STRATEGIC_ADVISORY_REPORT):
-{
-  "assistantOutput": {
-    "outputType": "STRATEGIC_ADVISORY_REPORT",
-    "report": {
-      "sectionBySectionContentStrategy": [
-        {
-          "sectionName": "...",
-          "purposeAndGoalAnalysis": "...",
-          "personalizedCopywritingPrompts": [ "..." ],
-          "abTestingSuggestions": [ "..." ]
-        }
-      ],
-      "integrationAndTechStackBlueprint": {
-        "essentialIntegrations": [
-          {
-            "tool": "...",
-            "purpose": "...",
-            "implementationGuidance": "...",
-            "codeSnippet": "..."
-          }
-        ]
-      },
-      "customizationAndBrandingGuide": {
-        "visualEnhancementTips": "...",
-        "sectionOptimization": "...",
-        "cmsAdaptationPlan": "..."
-      },
-      "seoAndPreLaunchChecklist": {
-        "generatedSeoMetatags": [ { "page": "...", "metaTitle": "...", "metaDescription": "..." } ],
-        "imageAltTextSuggestions": [ { "imageLocation": "...", "altText": "..." } ],
-        "technicalGoLiveChecklist": [ "..." ]
-      }
-    }
-  }
-}
+---
+
+### Path 3: Advisory Report (Goal: PROVIDE_ADVISORY)
+
+Output \`STRATEGIC_ADVISORY_REPORT\`.
+
+---
+
+### Constraints:
+*   **JSON Only:** Output must be a valid JSON object.
+*   **No Placeholders:** Write actual, strategic copy.
 `;
 
 export const generateVentureBuild = async (data: FormData): Promise<ApiResponse> => {
   const apiKey = process.env.API_KEY;
-  if (!apiKey) {
-    throw new Error("API Key not found in environment variables.");
+  if (!apiKey || apiKey.trim() === '') {
+    throw new Error("API Key is missing. Please add API_KEY to your environment variables (e.g. Vercel Project Settings).");
   }
 
   const ai = new GoogleGenAI({ apiKey });
+
+  // Refine the goal description passed to the AI
+  let goalDescription = "Generate Code/Website";
+  if (data.goal === 'PROVIDE_ADVISORY') {
+    goalDescription = "Provide an Advisory Report";
+  } else if (data.goal === 'GENERATE_COPY') {
+    goalDescription = `Generate High-Converting Copy for the provided template URL: ${data.templateUrl}`;
+  } else if (data.techStack === 'TEMPLATE_REPLICA') {
+    goalDescription = `Generate a Code Replica mimicking the structure of: ${data.templateUrl}`;
+  } else {
+    goalDescription = `Generate a ${data.techStack} codebase for a ${data.theme} project`;
+  }
 
   const prompt = JSON.stringify({
     task: "Generate Venture Build Output",
@@ -140,8 +115,10 @@ export const generateVentureBuild = async (data: FormData): Promise<ApiResponse>
       brandVoice: data.brandVoice,
       keyFeatures: data.keyFeatures,
       primaryCTA: data.primaryCTA,
-      framerTemplateUrl: data.framerTemplateUrl,
-      assistantsGoal: data.goal === 'GENERATE_REPLICA' ? "Generate a Site Replica" : "Provide an Advisory Report"
+      templateUrl: data.templateUrl,
+      techStack: data.techStack,
+      theme: data.theme,
+      assistantsGoal: goalDescription
     }
   }, null, 2);
 
@@ -161,16 +138,20 @@ export const generateVentureBuild = async (data: FormData): Promise<ApiResponse>
     }
 
     return JSON.parse(text) as ApiResponse;
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error generating venture build:", error);
+    // Improve error messaging for common issues
+    if (error.message?.includes('API_KEY')) throw error;
+    if (error.status === 403) throw new Error("API Key invalid or permissions denied.");
+    if (error.status === 429) throw new Error("Rate limit exceeded. Please try again later.");
     throw error;
   }
 };
 
 export const generateProjectBrief = async (seedConcept?: string): Promise<Partial<FormData>> => {
   const apiKey = process.env.API_KEY;
-  if (!apiKey) {
-    throw new Error("API Key not found in environment variables.");
+  if (!apiKey || apiKey.trim() === '') {
+    throw new Error("API Key is missing. Please add API_KEY to your environment variables.");
   }
 
   const ai = new GoogleGenAI({ apiKey });
@@ -203,8 +184,11 @@ export const generateProjectBrief = async (seedConcept?: string): Promise<Partia
     }
 
     return JSON.parse(text) as Partial<FormData>;
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error generating project brief:", error);
+    if (error.message?.includes('API_KEY')) throw error;
+    if (error.status === 403) throw new Error("API Key invalid or permissions denied.");
+    if (error.status === 429) throw new Error("Rate limit exceeded. Please try again later.");
     throw error;
   }
 };

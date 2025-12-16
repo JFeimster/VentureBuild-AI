@@ -1,6 +1,7 @@
+
 import React, { useState } from 'react';
-import { Plus, Trash2, Rocket, FileText, Sparkles, Wand2, Loader2 } from 'lucide-react';
-import { FormData } from '../types';
+import { Plus, Trash2, Rocket, FileText, Sparkles, Wand2, Loader2, AlertCircle, Laptop, Code2, LayoutTemplate, BoxSelect, Palette, PenTool } from 'lucide-react';
+import { FormData, TechStack, ProjectTheme } from '../types';
 import { generateProjectBrief } from '../services/geminiService';
 
 interface InputFormProps {
@@ -10,6 +11,7 @@ interface InputFormProps {
 
 const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading }) => {
   const [isAutoFilling, setIsAutoFilling] = useState(false);
+  const [autoFillError, setAutoFillError] = useState<string | null>(null);
   const [formData, setFormData] = useState<FormData>({
     projectName: '',
     coreConcept: '',
@@ -17,8 +19,10 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading }) => {
     brandVoice: 'Professional & Authoritative',
     keyFeatures: ['Core functionality feature'],
     primaryCTA: 'Get Started',
-    framerTemplateUrl: '',
-    goal: 'GENERATE_REPLICA',
+    templateUrl: '',
+    techStack: 'STATIC_WEBSITE',
+    theme: 'AGENCY',
+    goal: 'GENERATE_CODE',
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -52,6 +56,7 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading }) => {
 
   const handleSmartFill = async () => {
     setIsAutoFilling(true);
+    setAutoFillError(null);
     try {
       const seed = formData.coreConcept.trim().length > 3 ? formData.coreConcept : undefined;
       const generatedData = await generateProjectBrief(seed);
@@ -59,21 +64,35 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading }) => {
       setFormData((prev) => ({
         ...prev,
         ...generatedData,
-        // Ensure we have at least one feature
         keyFeatures: generatedData.keyFeatures && generatedData.keyFeatures.length > 0 
           ? generatedData.keyFeatures 
           : ['Core functionality feature'],
-        // Set default template if none exists
-        framerTemplateUrl: prev.framerTemplateUrl || 'https://framer.com/templates/focus',
+        templateUrl: prev.templateUrl,
       }));
     } catch (error: any) {
       console.error("Failed to autofill", error);
       const errorMessage = error.message || "Unknown error occurred";
-      alert(`Failed to generate brief: ${errorMessage}. Please check your API key and connection.`);
+      setAutoFillError(errorMessage);
     } finally {
       setIsAutoFilling(false);
     }
   };
+
+  const selectTechStack = (stack: TechStack) => {
+    setFormData(prev => ({ ...prev, techStack: stack }));
+  };
+
+  const themes: { value: ProjectTheme; label: string }[] = [
+    { value: 'AGENCY', label: 'Agency' },
+    { value: 'SAAS_DASHBOARD', label: 'OS / SaaS / Dashboard' },
+    { value: 'MARKETPLACE', label: 'Marketplace / Directory' },
+    { value: 'AI_TOOL_CATALOG', label: 'AI Tools & Catalogs' },
+    { value: 'FUNNEL_LANDER', label: 'Funnels / Landers' },
+    { value: 'CONTENT_MEMBERSHIP', label: 'Content / Membership' },
+    { value: 'LINK_IN_BIO', label: 'Link-in-Bio' },
+    { value: 'ECOMMERCE', label: 'Ecommerce' },
+    { value: 'PORTFOLIO', label: 'Portfolio' },
+  ];
 
   return (
     <div className="bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden">
@@ -96,6 +115,15 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading }) => {
           {formData.coreConcept.length > 3 ? 'Smart Complete' : 'Magic Auto-fill'}
         </button>
       </div>
+
+      {autoFillError && (
+        <div className="bg-red-50 px-6 py-3 border-b border-red-100 flex items-start gap-2">
+          <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+          <p className="text-sm text-red-700">
+            <strong>Auto-fill failed:</strong> {autoFillError}
+          </p>
+        </div>
+      )}
       
       <form onSubmit={handleSubmit} className="p-6 space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -201,36 +229,40 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading }) => {
           </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">Framer Template URL</label>
-          <input
-            type="url"
-            name="framerTemplateUrl"
-            value={formData.framerTemplateUrl}
-            onChange={handleInputChange}
-            className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
-            placeholder="https://framer.com/templates/..."
-            required
-          />
-        </div>
-
         <div className="pt-4 border-t border-slate-200">
-          <label className="block text-sm font-medium text-slate-700 mb-3">Assistant Goal</label>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <label className="block text-sm font-medium text-slate-700 mb-3">Goal & Output Format</label>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <button
               type="button"
-              onClick={() => setFormData(prev => ({ ...prev, goal: 'GENERATE_REPLICA' }))}
+              onClick={() => setFormData(prev => ({ ...prev, goal: 'GENERATE_CODE' }))}
               className={`p-4 rounded-xl border-2 text-left transition relative flex flex-col gap-2 ${
-                formData.goal === 'GENERATE_REPLICA'
+                formData.goal === 'GENERATE_CODE'
                   ? 'border-indigo-600 bg-indigo-50'
                   : 'border-slate-200 hover:border-indigo-300'
               }`}
             >
               <div className="flex items-center gap-2 font-bold text-slate-900">
-                <Sparkles className={`w-5 h-5 ${formData.goal === 'GENERATE_REPLICA' ? 'text-indigo-600' : 'text-slate-400'}`} />
-                Generate Site Replica
+                <Code2 className={`w-5 h-5 ${formData.goal === 'GENERATE_CODE' ? 'text-indigo-600' : 'text-slate-400'}`} />
+                Build Application
               </div>
-              <p className="text-sm text-slate-600">Get a fully populated build package with strategic copy and assets.</p>
+              <p className="text-xs text-slate-600">Generate a launch-ready website, app, or widget.</p>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setFormData(prev => ({ ...prev, goal: 'GENERATE_COPY' }))}
+              className={`p-4 rounded-xl border-2 text-left transition relative flex flex-col gap-2 ${
+                formData.goal === 'GENERATE_COPY'
+                  ? 'border-indigo-600 bg-indigo-50'
+                  : 'border-slate-200 hover:border-indigo-300'
+              }`}
+            >
+              <div className="flex items-center gap-2 font-bold text-slate-900">
+                <PenTool className={`w-5 h-5 ${formData.goal === 'GENERATE_COPY' ? 'text-indigo-600' : 'text-slate-400'}`} />
+                Template Copy
+              </div>
+              <p className="text-xs text-slate-600">Generate specific copywriting for a template (Wix, Framer, etc.).</p>
             </button>
 
             <button
@@ -244,11 +276,139 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading }) => {
             >
               <div className="flex items-center gap-2 font-bold text-slate-900">
                 <FileText className={`w-5 h-5 ${formData.goal === 'PROVIDE_ADVISORY' ? 'text-indigo-600' : 'text-slate-400'}`} />
-                Strategic Advisory Report
+                Strategic Advisory
               </div>
-              <p className="text-sm text-slate-600">Get a deep-dive strategy, tech stack blueprint, and launch checklist.</p>
+              <p className="text-xs text-slate-600">Get a strategy report, tech stack plan, and checklist.</p>
             </button>
           </div>
+
+          {/* Configuration for Code Generation */}
+          {formData.goal === 'GENERATE_CODE' && (
+            <div className="animate-in fade-in slide-in-from-top-2 space-y-6">
+              
+              {/* Theme Selection */}
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Website Theme & Purpose</label>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {themes.map((theme) => (
+                    <button
+                      key={theme.value}
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, theme: theme.value }))}
+                      className={`p-3 rounded-lg border text-xs font-bold text-left transition flex items-center gap-2 ${
+                        formData.theme === theme.value
+                          ? 'border-indigo-600 bg-indigo-50 text-indigo-700'
+                          : 'border-slate-200 text-slate-600 hover:border-indigo-300'
+                      }`}
+                    >
+                      <Palette className="w-4 h-4 shrink-0" />
+                      {theme.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Tech Stack Selection */}
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Tech Stack</label>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => selectTechStack('STATIC_WEBSITE')}
+                    className={`p-3 rounded-lg border text-sm font-medium transition flex flex-col items-center gap-2 text-center ${
+                      formData.techStack === 'STATIC_WEBSITE'
+                        ? 'border-indigo-600 bg-indigo-50 text-indigo-700'
+                        : 'border-slate-200 text-slate-600 hover:border-indigo-300'
+                    }`}
+                  >
+                    <Sparkles className="w-5 h-5" />
+                    Static Site
+                    <span className="text-[10px] text-indigo-500 font-bold bg-indigo-100 px-1.5 py-0.5 rounded">HOT</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => selectTechStack('NEXT_JS')}
+                    className={`p-3 rounded-lg border text-sm font-medium transition flex flex-col items-center gap-2 text-center ${
+                      formData.techStack === 'NEXT_JS'
+                        ? 'border-indigo-600 bg-indigo-50 text-indigo-700'
+                        : 'border-slate-200 text-slate-600 hover:border-indigo-300'
+                    }`}
+                  >
+                    <Laptop className="w-5 h-5" />
+                    Next.js App
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => selectTechStack('EMBED_WIDGET')}
+                    className={`p-3 rounded-lg border text-sm font-medium transition flex flex-col items-center gap-2 text-center ${
+                      formData.techStack === 'EMBED_WIDGET'
+                        ? 'border-indigo-600 bg-indigo-50 text-indigo-700'
+                        : 'border-slate-200 text-slate-600 hover:border-indigo-300'
+                    }`}
+                  >
+                    <BoxSelect className="w-5 h-5" />
+                    Embed Widget
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => selectTechStack('TEMPLATE_REPLICA')}
+                    className={`p-3 rounded-lg border text-sm font-medium transition flex flex-col items-center gap-2 text-center ${
+                      formData.techStack === 'TEMPLATE_REPLICA'
+                        ? 'border-indigo-600 bg-indigo-50 text-indigo-700'
+                        : 'border-slate-200 text-slate-600 hover:border-indigo-300'
+                    }`}
+                  >
+                    <LayoutTemplate className="w-5 h-5" />
+                    Replica
+                  </button>
+                </div>
+
+                {/* Conditional Input for Replica */}
+                {formData.techStack === 'TEMPLATE_REPLICA' && (
+                  <div className="mt-4 animate-in fade-in">
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Target Template URL</label>
+                    <input
+                      type="url"
+                      name="templateUrl"
+                      value={formData.templateUrl}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                      placeholder="e.g. https://framer.com/..., https://wix.com/..."
+                      required={formData.techStack === 'TEMPLATE_REPLICA'}
+                    />
+                    <p className="text-xs text-slate-500 mt-1">We will generate code trying to mimic this structure.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Configuration for Template Copywriting */}
+          {formData.goal === 'GENERATE_COPY' && (
+            <div className="animate-in fade-in slide-in-from-top-2 space-y-6">
+               <div className="bg-indigo-50 border border-indigo-100 rounded-lg p-4">
+                  <h3 className="text-sm font-bold text-indigo-900 mb-1">Template Copywriting Mode</h3>
+                  <p className="text-xs text-indigo-700">Provide a link to any template (Framer, Webflow, WordPress, etc.), and we will generate high-converting copy specifically structured for its sections.</p>
+               </div>
+               
+               <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Template URL</label>
+                <input
+                  type="url"
+                  name="templateUrl"
+                  value={formData.templateUrl}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                  placeholder="e.g. https://framer.com/templates/..."
+                  required
+                />
+              </div>
+            </div>
+          )}
+
         </div>
 
         <button
@@ -259,7 +419,7 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading }) => {
           {isLoading ? (
             <>
               <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-              Processing Brief...
+              Building...
             </>
           ) : (
             <>

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { generateVentureBuild } from './services/geminiService';
 import InputForm from './components/InputForm';
@@ -41,12 +42,19 @@ const App: React.FC = () => {
   const handleSave = () => {
     if (!result) return;
     
+    let savedType: any = 'PROVIDE_ADVISORY';
+    if (result.assistantOutput.outputType === 'AUTOMATED_BUILD_PACKAGE') {
+      savedType = 'GENERATE_COPY';
+    } else if (result.assistantOutput.outputType === 'GENERATED_CODEBASE') {
+      savedType = 'GENERATE_CODE';
+    }
+
     const project: SavedProject = {
       id: Date.now().toString(),
       name: currentProjectName || 'Untitled Project',
       date: new Date().toLocaleDateString(),
       data: result,
-      type: result.assistantOutput.outputType === 'AUTOMATED_BUILD_PACKAGE' ? 'GENERATE_REPLICA' : 'PROVIDE_ADVISORY'
+      type: savedType
     };
     
     saveProjectToStorage(project);
@@ -111,7 +119,7 @@ const App: React.FC = () => {
             <span className="font-bold text-xl tracking-tight text-slate-900">Venture<span className="text-indigo-600">Build</span> AI</span>
           </div>
           <div className="text-xs font-medium bg-slate-100 text-slate-500 px-3 py-1 rounded-full border border-slate-200">
-            v1.1.0
+            v1.2.0
           </div>
         </div>
       </header>
@@ -144,38 +152,41 @@ const App: React.FC = () => {
               Saved Projects
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {savedProjects.map((project) => (
-                <div 
-                  key={project.id} 
-                  onClick={() => handleLoad(project)}
-                  className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-indigo-300 hover:shadow-md transition cursor-pointer group flex items-center justify-between"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${
-                      project.type === 'GENERATE_REPLICA' ? 'bg-indigo-100 text-indigo-600' : 'bg-purple-100 text-purple-600'
-                    }`}>
-                      {project.type === 'GENERATE_REPLICA' ? <Zap className="w-5 h-5" /> : <Box className="w-5 h-5" />}
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-slate-900 group-hover:text-indigo-600 transition">{project.name}</h3>
-                      <div className="flex items-center gap-2 text-xs text-slate-500">
-                        <Clock className="w-3 h-3" />
-                        {project.date}
+              {savedProjects.map((project) => {
+                const isBuild = project.type === 'GENERATE_REPLICA' || project.type === 'GENERATE_CODE';
+                return (
+                  <div 
+                    key={project.id} 
+                    onClick={() => handleLoad(project)}
+                    className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-indigo-300 hover:shadow-md transition cursor-pointer group flex items-center justify-between"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${
+                        isBuild ? 'bg-indigo-100 text-indigo-600' : 'bg-purple-100 text-purple-600'
+                      }`}>
+                        {isBuild ? <Zap className="w-5 h-5" /> : <Box className="w-5 h-5" />}
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-slate-900 group-hover:text-indigo-600 transition">{project.name}</h3>
+                        <div className="flex items-center gap-2 text-xs text-slate-500">
+                          <Clock className="w-3 h-3" />
+                          {project.date}
+                        </div>
                       </div>
                     </div>
+                    <div className="flex items-center gap-2">
+                      <button 
+                        onClick={(e) => deleteProject(project.id, e)}
+                        className="p-2 text-slate-300 hover:text-red-500 transition rounded-full hover:bg-red-50"
+                        title="Delete Project"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                      <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-indigo-400 transition" />
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <button 
-                      onClick={(e) => deleteProject(project.id, e)}
-                      className="p-2 text-slate-300 hover:text-red-500 transition rounded-full hover:bg-red-50"
-                      title="Delete Project"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                    <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-indigo-400 transition" />
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
@@ -201,8 +212,8 @@ const App: React.FC = () => {
               <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center mx-auto mb-4">
                 <Layers className="w-6 h-6" />
               </div>
-              <h3 className="font-bold text-slate-900 mb-2">Framer Optimized</h3>
-              <p className="text-sm text-slate-500">Output specifically structured for immediate implementation in Framer.</p>
+              <h3 className="font-bold text-slate-900 mb-2">Template Optimized</h3>
+              <p className="text-sm text-slate-500">Output specifically structured for immediate implementation in Framer, Webflow, or Wix.</p>
             </div>
           </div>
         )}

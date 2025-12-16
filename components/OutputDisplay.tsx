@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { ApiResponse } from '../types';
 import BuildPackageView from './BuildPackageView';
@@ -48,6 +49,10 @@ const OutputDisplay: React.FC<OutputDisplayProps> = ({ data, onReset, onSave, on
 
       {assistantOutput.outputType === 'AUTOMATED_BUILD_PACKAGE' && assistantOutput.package && (
         <BuildPackageView data={assistantOutput.package} onExport={onDownload} />
+      )}
+
+      {assistantOutput.outputType === 'GENERATED_CODEBASE' && assistantOutput.codebase && (
+        <BuildPackageView codebase={assistantOutput.codebase} onExport={onDownload} />
       )}
 
       {assistantOutput.outputType === 'STRATEGIC_ADVISORY_REPORT' && assistantOutput.report && (

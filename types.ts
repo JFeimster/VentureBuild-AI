@@ -1,4 +1,16 @@
-export type OutputType = 'GENERATE_REPLICA' | 'PROVIDE_ADVISORY';
+
+export type OutputType = 'GENERATE_CODE' | 'PROVIDE_ADVISORY' | 'GENERATE_COPY' | 'GENERATE_REPLICA';
+export type TechStack = 'STATIC_WEBSITE' | 'NEXT_JS' | 'EMBED_WIDGET' | 'TEMPLATE_REPLICA';
+export type ProjectTheme = 
+  | 'AGENCY' 
+  | 'SAAS_DASHBOARD' 
+  | 'MARKETPLACE' 
+  | 'AI_TOOL_CATALOG' 
+  | 'FUNNEL_LANDER' 
+  | 'CONTENT_MEMBERSHIP' 
+  | 'LINK_IN_BIO' 
+  | 'ECOMMERCE'
+  | 'PORTFOLIO';
 
 export interface FormData {
   projectName: string;
@@ -7,11 +19,13 @@ export interface FormData {
   brandVoice: string;
   keyFeatures: string[];
   primaryCTA: string;
-  framerTemplateUrl: string;
+  templateUrl: string; // Generalized from framerTemplateUrl
+  techStack: TechStack;
+  theme: ProjectTheme;
   goal: OutputType;
 }
 
-// --- Automated Build Package Types ---
+// --- Automated Build Package Types (Template Content) ---
 
 export interface ContentSection {
   headline?: string;
@@ -61,7 +75,7 @@ export interface ImageBrief {
 
 export interface AutomatedBuildPackage {
   coreProjectFile: {
-    framerRemixLink: string;
+    templateLink: string; // Generalized
     structuredContentJson: Record<string, ContentSection | ContentSection[]>;
   };
   aiCraftedStrategicCopy: {
@@ -77,6 +91,38 @@ export interface AutomatedBuildPackage {
     fontRecommendations: FontPairing[];
     imageAndIconBriefs: ImageBrief[];
   };
+}
+
+// --- Generated Codebase Types (Static/Next/Widget) ---
+
+export interface SiteSpec {
+  positioning: string;
+  targetAudience: string;
+  mainPromise: string;
+}
+
+export interface WireframeSection {
+  sectionName: string;
+  purpose: string;
+  headline: string;
+  subheadOptions: string[];
+  bulletPoints: string[];
+  suggestedCTA: string;
+}
+
+export interface CodeFile {
+  path: string; // e.g., "index.html", "styles/main.css"
+  content: string;
+}
+
+export interface GeneratedCodebase {
+  techStack: TechStack;
+  theme: ProjectTheme;
+  siteSpec?: SiteSpec;
+  wireframe?: WireframeSection[];
+  files: CodeFile[];
+  setupInstructions: string;
+  previewHtml?: string; // For immediate rendering if applicable (usually index.html content)
 }
 
 // --- Strategic Advisory Report Types ---
@@ -128,8 +174,9 @@ export interface StrategicAdvisoryReport {
 // --- Union Type for API Response ---
 
 export interface AssistantOutput {
-  outputType: 'AUTOMATED_BUILD_PACKAGE' | 'STRATEGIC_ADVISORY_REPORT';
-  package?: AutomatedBuildPackage;
+  outputType: 'AUTOMATED_BUILD_PACKAGE' | 'STRATEGIC_ADVISORY_REPORT' | 'GENERATED_CODEBASE';
+  package?: AutomatedBuildPackage; // Template Content support
+  codebase?: GeneratedCodebase;   // Code support
   report?: StrategicAdvisoryReport;
 }
 
