@@ -53,7 +53,7 @@ export const downloadProjectZip = async (data: ApiResponse, projectName: string)
   document.body.removeChild(a);
 };
 
-const generatePackageReadme = (pkg: AutomatedBuildPackage, name: string): string => {
+export const generatePackageReadme = (pkg: AutomatedBuildPackage, name: string): string => {
   return `# ${name} - Venture Build Package
 
 ## Value Proposition
@@ -76,7 +76,7 @@ ${pkg.preliminaryBrandAssetPack.curatedColorPalette.map(c => `- ${c.role}: ${c.h
 `;
 };
 
-const generateReportReadme = (report: StrategicAdvisoryReport, name: string): string => {
+export const generateReportReadme = (report: StrategicAdvisoryReport, name: string): string => {
   return `# ${name} - Strategic Advisory Report
 
 ## Executive Summary
@@ -93,7 +93,7 @@ ${report.seoAndPreLaunchChecklist.technicalGoLiveChecklist.map(i => `- [ ] ${i}`
 `;
 };
 
-const generateHtmlSite = (pkg: AutomatedBuildPackage, name: string): string => {
+export const generateHtmlSite = (pkg: AutomatedBuildPackage, name: string, embeddedCss?: string): string => {
   const colors = pkg.preliminaryBrandAssetPack.curatedColorPalette;
   const primaryColor = colors.find(c => c.role.toLowerCase().includes('primary'))?.hex || '#4F46E5';
   
@@ -103,7 +103,7 @@ const generateHtmlSite = (pkg: AutomatedBuildPackage, name: string): string => {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${name}</title>
-    <link rel="stylesheet" href="styles.css">
+    ${embeddedCss ? `<style>${embeddedCss}</style>` : `<link rel="stylesheet" href="styles.css">`}
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -167,7 +167,7 @@ const generateHtmlSite = (pkg: AutomatedBuildPackage, name: string): string => {
 </html>`;
 };
 
-const generateCss = (pkg: AutomatedBuildPackage): string => {
+export const generateCss = (pkg: AutomatedBuildPackage): string => {
   const colors = pkg.preliminaryBrandAssetPack.curatedColorPalette;
   const primary = colors.find(c => c.role.toLowerCase().includes('primary'))?.hex || '#4f46e5';
   const background = colors.find(c => c.role.toLowerCase().includes('background'))?.hex || '#ffffff';
