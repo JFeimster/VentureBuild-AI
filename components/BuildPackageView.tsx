@@ -498,13 +498,28 @@ const BuildPackageView: React.FC<BuildPackageViewProps> = ({ data, codebase, onE
             </div>
           </div>
 
-          {/* Image Briefs */}
+          {/* Image Briefs & Generated Images */}
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
               <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
                 <ImageIcon className="w-5 h-5 text-indigo-500" />
-                Image Generation Briefs
+                Images & Visuals
               </h3>
+              
+              {data.preliminaryBrandAssetPack.generatedImages && data.preliminaryBrandAssetPack.generatedImages.length > 0 && (
+                <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {data.preliminaryBrandAssetPack.generatedImages.map((img, idx) => (
+                    <div key={idx} className="group relative rounded-lg overflow-hidden shadow-sm border border-slate-200">
+                      <img src={img.imageUrl} alt={img.section} className="w-full h-48 object-cover group-hover:scale-105 transition duration-500" />
+                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
+                        <span className="text-xs font-bold text-white bg-indigo-600 px-2 py-1 rounded-full uppercase tracking-wider">{img.section}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               <div className="space-y-4">
+                <h4 className="text-sm font-bold text-slate-600 uppercase tracking-wider mb-2">Prompt Briefs</h4>
                 {data.preliminaryBrandAssetPack.imageAndIconBriefs.map((img, idx) => (
                   <div key={idx} className="flex gap-4 p-4 bg-slate-50 rounded-lg border border-slate-100 group relative">
                     <div className="shrink-0 w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-bold text-sm">

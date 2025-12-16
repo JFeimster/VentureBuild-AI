@@ -73,6 +73,11 @@ export interface ImageBrief {
   brief: string;
 }
 
+export interface GeneratedImage {
+  section: string;
+  imageUrl: string;
+}
+
 export interface AutomatedBuildPackage {
   coreProjectFile: {
     templateLink: string; // Generalized
@@ -90,6 +95,7 @@ export interface AutomatedBuildPackage {
     curatedColorPalette: ColorAsset[];
     fontRecommendations: FontPairing[];
     imageAndIconBriefs: ImageBrief[];
+    generatedImages: GeneratedImage[];
   };
 }
 
