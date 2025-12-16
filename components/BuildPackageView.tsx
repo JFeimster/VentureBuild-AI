@@ -77,23 +77,24 @@ const BuildPackageView: React.FC<BuildPackageViewProps> = ({ data, onExport }) =
       </div>
 
       {activeTab === 'preview' ? (
-        <div className="bg-slate-900 rounded-xl overflow-hidden shadow-2xl border border-slate-800">
+        <div className="bg-slate-900 rounded-xl overflow-hidden shadow-2xl border border-slate-800 ring-1 ring-white/10">
           <div className="bg-slate-800 px-4 py-3 flex items-center gap-4 border-b border-slate-700">
             <div className="flex gap-1.5">
-              <div className="w-3 h-3 rounded-full bg-red-500/80"></div>
-              <div className="w-3 h-3 rounded-full bg-yellow-500/80"></div>
-              <div className="w-3 h-3 rounded-full bg-green-500/80"></div>
+              <div className="w-3 h-3 rounded-full bg-red-500/80 hover:bg-red-500 transition"></div>
+              <div className="w-3 h-3 rounded-full bg-yellow-500/80 hover:bg-yellow-500 transition"></div>
+              <div className="w-3 h-3 rounded-full bg-green-500/80 hover:bg-green-500 transition"></div>
             </div>
-            <div className="bg-slate-900/50 text-slate-400 text-xs px-4 py-1.5 rounded-md flex-1 text-center font-mono border border-slate-700/50 flex items-center justify-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-              localhost:3000
+            <div className="bg-slate-900/50 text-slate-400 text-xs px-4 py-1.5 rounded-md flex-1 text-center font-mono border border-slate-700/50 flex items-center justify-center gap-2 select-none">
+              <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+              preview.localhost
             </div>
           </div>
-          <div className="bg-white w-full h-[800px]">
+          <div className="bg-white w-full h-[800px] relative">
              <iframe 
                 srcDoc={previewHtml}
-                className="w-full h-full border-0"
+                className="w-full h-full border-0 absolute inset-0"
                 title="Site Preview"
+                sandbox="allow-scripts"
              />
           </div>
         </div>

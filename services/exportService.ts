@@ -94,75 +94,99 @@ ${report.seoAndPreLaunchChecklist.technicalGoLiveChecklist.map(i => `- [ ] ${i}`
 };
 
 export const generateHtmlSite = (pkg: AutomatedBuildPackage, name: string, embeddedCss?: string): string => {
-  const colors = pkg.preliminaryBrandAssetPack.curatedColorPalette;
-  const primaryColor = colors.find(c => c.role.toLowerCase().includes('primary'))?.hex || '#4F46E5';
-  
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${name}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     ${embeddedCss ? `<style>${embeddedCss}</style>` : `<link rel="stylesheet" href="styles.css">`}
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <header class="header">
-        <div class="container">
-            <h1 class="logo">${name}</h1>
-            <nav>
-                <a href="#features">Features</a>
-                <a href="#pricing">Pricing</a>
-            </nav>
-            <a href="#" class="btn btn-primary">${pkg.aiCraftedStrategicCopy.callsToAction[0]?.text || 'Get Started'}</a>
-        </div>
-    </header>
-
-    <section class="hero">
-        <div class="container">
-            <h2>${pkg.aiCraftedStrategicCopy.valueProposition}</h2>
-            <p class="subtitle">${pkg.aiCraftedStrategicCopy.missionStatement}</p>
-            <div class="cta-group">
-                <a href="#" class="btn btn-primary">${pkg.aiCraftedStrategicCopy.callsToAction[1]?.text || 'Start Now'}</a>
+    <div class="wrapper">
+        <header class="header">
+            <div class="container nav-container">
+                <div class="logo">${name}</div>
+                <nav class="nav-links">
+                    <a href="#features">Features</a>
+                    <a href="#pricing">Pricing</a>
+                </nav>
+                <div class="nav-cta">
+                    <a href="#" class="btn btn-primary">${pkg.aiCraftedStrategicCopy.callsToAction[0]?.text || 'Get Started'}</a>
+                </div>
             </div>
-        </div>
-    </section>
+        </header>
 
-    <section id="features" class="features">
-        <div class="container">
-            <h3>Key Features</h3>
-            <div class="grid">
-                ${pkg.aiCraftedStrategicCopy.featureBenefitDescriptions.map(f => `
-                <div class="card">
-                    <h4>${f.featureName}</h4>
-                    <p>${f.benefitCopy}</p>
-                </div>`).join('')}
+        <section class="hero">
+            <div class="container hero-container">
+                <div class="hero-content">
+                    <h1 class="hero-title">${pkg.aiCraftedStrategicCopy.valueProposition}</h1>
+                    <p class="hero-subtitle">${pkg.aiCraftedStrategicCopy.missionStatement}</p>
+                    <div class="cta-group">
+                        <a href="#" class="btn btn-primary btn-lg">${pkg.aiCraftedStrategicCopy.callsToAction[1]?.text || 'Start Now'}</a>
+                        <a href="#features" class="btn btn-secondary btn-lg">Learn More</a>
+                    </div>
+                </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <section id="pricing" class="pricing">
-        <div class="container">
-            <h3>Pricing Plans</h3>
-            <div class="grid">
-                ${pkg.aiCraftedStrategicCopy.pricingTierBreakdown.map(t => `
-                <div class="card pricing-card">
-                    <h4>${t.tierName}</h4>
-                    <div class="price">${t.price}</div>
-                    <ul>
-                        ${t.features.map(feat => `<li>${feat}</li>`).join('')}
-                    </ul>
-                    <a href="#" class="btn btn-outline">Choose ${t.tierName}</a>
-                </div>`).join('')}
+        <section id="features" class="section features">
+            <div class="container">
+                <div class="section-header">
+                    <span class="badge">Features</span>
+                    <h2>Why Choose ${name}</h2>
+                </div>
+                <div class="grid">
+                    ${pkg.aiCraftedStrategicCopy.featureBenefitDescriptions.map(f => `
+                    <div class="card feature-card">
+                        <div class="card-icon"></div>
+                        <h4>${f.featureName}</h4>
+                        <p>${f.benefitCopy}</p>
+                    </div>`).join('')}
+                </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <footer class="footer">
-        <div class="container">
-            <p>&copy; ${new Date().getFullYear()} ${name}. All rights reserved.</p>
-        </div>
-    </footer>
+        <section id="pricing" class="section pricing">
+            <div class="container">
+                <div class="section-header">
+                    <span class="badge">Pricing</span>
+                    <h2>Simple, Transparent Pricing</h2>
+                </div>
+                <div class="grid pricing-grid">
+                    ${pkg.aiCraftedStrategicCopy.pricingTierBreakdown.map((t, i) => `
+                    <div class="card pricing-card ${i === 1 ? 'featured' : ''}">
+                        ${i === 1 ? '<div class="popular-tag">Most Popular</div>' : ''}
+                        <h4>${t.tierName}</h4>
+                        <div class="price">${t.price}</div>
+                        <ul class="feature-list">
+                            ${t.features.map(feat => `<li>${feat}</li>`).join('')}
+                        </ul>
+                        <a href="#" class="btn ${i === 1 ? 'btn-primary' : 'btn-outline'} full-width">Choose ${t.tierName}</a>
+                    </div>`).join('')}
+                </div>
+            </div>
+        </section>
+
+        <footer class="footer">
+            <div class="container">
+                <div class="footer-content">
+                    <div class="footer-brand">
+                        <h3>${name}</h3>
+                        <p>&copy; ${new Date().getFullYear()} All rights reserved.</p>
+                    </div>
+                    <div class="footer-links">
+                         <a href="#">Privacy</a>
+                         <a href="#">Terms</a>
+                         <a href="#">Contact</a>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
 </body>
 </html>`;
 };
@@ -170,15 +194,28 @@ export const generateHtmlSite = (pkg: AutomatedBuildPackage, name: string, embed
 export const generateCss = (pkg: AutomatedBuildPackage): string => {
   const colors = pkg.preliminaryBrandAssetPack.curatedColorPalette;
   const primary = colors.find(c => c.role.toLowerCase().includes('primary'))?.hex || '#4f46e5';
-  const background = colors.find(c => c.role.toLowerCase().includes('background'))?.hex || '#ffffff';
+  const secondary = colors.find(c => c.role.toLowerCase().includes('secondary'))?.hex || '#818cf8';
+  const background = colors.find(c => c.role.toLowerCase().includes('background'))?.hex || '#f8fafc';
   const text = colors.find(c => c.role.toLowerCase().includes('text'))?.hex || '#1e293b';
+  const accent = colors.find(c => c.role.toLowerCase().includes('accent'))?.hex || '#f43f5e';
 
   return `
 :root {
     --primary: ${primary};
+    --primary-light: ${primary}20;
+    --secondary: ${secondary};
     --bg: ${background};
     --text: ${text};
+    --text-light: ${text}99;
+    --white: #ffffff;
+    --border: rgba(0,0,0,0.08);
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+    --radius: 12px;
 }
+
+* { box-sizing: border-box; }
 
 body {
     font-family: 'Inter', sans-serif;
@@ -186,133 +223,350 @@ body {
     color: var(--text);
     margin: 0;
     line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
 }
 
 .container {
     max-width: 1100px;
     margin: 0 auto;
-    padding: 0 20px;
+    padding: 0 24px;
 }
 
+/* Header */
 .header {
-    padding: 20px 0;
-    border-bottom: 1px solid rgba(0,0,0,0.1);
+    background: rgba(255,255,255,0.8);
+    backdrop-filter: blur(12px);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    border-bottom: 1px solid var(--border);
+    padding: 16px 0;
 }
 
-.header .container {
+.nav-container {
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
 .logo {
-    font-weight: 700;
-    font-size: 1.5rem;
-    margin: 0;
+    font-weight: 800;
+    font-size: 1.25rem;
+    color: var(--text);
+    letter-spacing: -0.025em;
 }
 
-nav a {
-    margin: 0 15px;
+.nav-links {
+    display: none;
+}
+
+@media (min-width: 768px) {
+    .nav-links {
+        display: flex;
+        gap: 32px;
+    }
+}
+
+.nav-links a {
     text-decoration: none;
     color: var(--text);
     font-weight: 500;
+    font-size: 0.95rem;
+    transition: color 0.2s;
 }
 
+.nav-links a:hover {
+    color: var(--primary);
+}
+
+/* Buttons */
 .btn {
     padding: 10px 20px;
-    border-radius: 6px;
+    border-radius: 8px;
     text-decoration: none;
     font-weight: 600;
-    display: inline-block;
+    font-size: 0.95rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    cursor: pointer;
+    border: none;
 }
 
 .btn-primary {
     background-color: var(--primary);
-    color: white;
+    color: var(--white);
+    box-shadow: 0 4px 12px ${primary}40;
+}
+
+.btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px ${primary}50;
+    filter: brightness(110%);
+}
+
+.btn-secondary {
+    background-color: var(--white);
+    color: var(--text);
+    border: 1px solid var(--border);
+}
+
+.btn-secondary:hover {
+    background-color: #f8fafc;
+    border-color: #cbd5e1;
 }
 
 .btn-outline {
+    background: transparent;
     border: 2px solid var(--primary);
     color: var(--primary);
 }
 
+.btn-outline:hover {
+    background: var(--primary-light);
+}
+
+.btn-lg {
+    padding: 14px 28px;
+    font-size: 1.1rem;
+}
+
+.full-width {
+    width: 100%;
+}
+
+/* Hero */
 .hero {
-    padding: 80px 0;
+    padding: 100px 0 80px;
     text-align: center;
+    overflow: hidden;
 }
 
-.hero h2 {
+.hero-title {
     font-size: 2.5rem;
-    margin-bottom: 20px;
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 24px;
+    background: linear-gradient(135deg, var(--text) 0%, var(--primary) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -0.03em;
 }
 
-.subtitle {
-    font-size: 1.2rem;
-    color: #64748b;
+@media (min-width: 768px) {
+    .hero-title {
+        font-size: 3.5rem;
+    }
+}
+
+.hero-subtitle {
+    font-size: 1.25rem;
+    color: var(--text-light);
     max-width: 600px;
     margin: 0 auto 40px;
+    line-height: 1.6;
 }
 
-.features, .pricing {
-    padding: 60px 0;
+.cta-group {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    align-items: center;
+    justify-content: center;
 }
 
+@media (min-width: 640px) {
+    .cta-group {
+        flex-direction: row;
+    }
+}
+
+/* Sections */
+.section {
+    padding: 80px 0;
+}
+
+.section-header {
+    text-align: center;
+    margin-bottom: 60px;
+}
+
+.badge {
+    background: var(--primary-light);
+    color: var(--primary);
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 6px 12px;
+    border-radius: 20px;
+    display: inline-block;
+    margin-bottom: 16px;
+    letter-spacing: 0.05em;
+}
+
+.section h2 {
+    font-size: 2.25rem;
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: -0.02em;
+}
+
+/* Cards */
 .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 30px;
-    margin-top: 40px;
+    grid-template-columns: 1fr;
+    gap: 32px;
+}
+
+@media (min-width: 768px) {
+    .grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .pricing-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
 }
 
 .card {
-    background: white;
-    padding: 30px;
-    border-radius: 10px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-    border: 1px solid rgba(0,0,0,0.05);
+    background: var(--white);
+    padding: 32px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border);
+    transition: all 0.3s ease;
 }
 
-.features h3, .pricing h3 {
-    text-align: center;
-    font-size: 2rem;
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
 }
 
+.feature-card h4 {
+    font-size: 1.25rem;
+    margin: 0 0 12px;
+}
+
+.feature-card p {
+    color: var(--text-light);
+    margin: 0;
+}
+
+.card-icon {
+    width: 48px;
+    height: 48px;
+    background: var(--primary-light);
+    border-radius: 12px;
+    margin-bottom: 24px;
+}
+
+/* Pricing */
 .pricing-card {
-    text-align: center;
-}
-
-.price {
-    font-size: 2.5rem;
-    font-weight: 700;
-    color: var(--primary);
-    margin: 20px 0;
-}
-
-.pricing-card ul {
-    list-style: none;
-    padding: 0;
-    margin-bottom: 30px;
-    text-align: left;
-}
-
-.pricing-card li {
-    margin-bottom: 10px;
-    padding-left: 20px;
+    display: flex;
+    flex-direction: column;
     position: relative;
 }
 
-.pricing-card li:before {
-    content: "✓";
-    color: var(--primary);
-    position: absolute;
-    left: 0;
+.pricing-card.featured {
+    border: 2px solid var(--primary);
+    box-shadow: var(--shadow-md);
 }
 
+.popular-tag {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--primary);
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 12px;
+    text-transform: uppercase;
+}
+
+.price {
+    font-size: 3rem;
+    font-weight: 800;
+    color: var(--text);
+    margin: 16px 0 24px;
+    letter-spacing: -0.02em;
+}
+
+.feature-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 32px;
+    flex-grow: 1;
+}
+
+.feature-list li {
+    padding-left: 28px;
+    position: relative;
+    margin-bottom: 12px;
+    color: var(--text-light);
+    font-size: 0.95rem;
+}
+
+.feature-list li:before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    color: var(--primary);
+    font-weight: 700;
+}
+
+/* Footer */
 .footer {
-    padding: 40px 0;
+    padding: 60px 0;
+    border-top: 1px solid var(--border);
+    margin-top: 80px;
+    background: white;
+}
+
+.footer-content {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
     text-align: center;
-    color: #64748b;
-    border-top: 1px solid rgba(0,0,0,0.1);
+}
+
+@media (min-width: 768px) {
+    .footer-content {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        text-align: left;
+    }
+}
+
+.footer h3 {
+    margin: 0 0 8px;
+    font-size: 1.25rem;
+}
+
+.footer p {
+    color: var(--text-light);
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+.footer-links {
+    display: flex;
+    gap: 24px;
+    justify-content: center;
+}
+
+.footer-links a {
+    color: var(--text-light);
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: color 0.2s;
+}
+
+.footer-links a:hover {
+    color: var(--primary);
 }
 `;
 };
