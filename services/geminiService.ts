@@ -89,7 +89,11 @@ Your output must be a valid JSON object containing a "Site Spec", a "Section-by-
             },
             // REQUIREMENT: You MUST generate at least 4 distinct briefs covering different visual types (e.g., 1 Photorealistic Scene, 1 Abstract 3D shape, 1 UI Mockup, 1 Icon Set).
          ],
-         "generatedImages": [ ... ]
+         "generatedImages": [
+            { "section": "Hero", "imageUrl": "https://placehold.co/600x400/png?text=Hero+Image" },
+            { "section": "Features", "imageUrl": "https://placehold.co/400x300/png?text=Features" }
+            // MANDATORY: Generate 2-3 placeholder image objects for key sections (Hero, Features, etc.)
+         ]
       }
     }
   }
