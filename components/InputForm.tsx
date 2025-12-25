@@ -230,20 +230,24 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading }) => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
                    <label className="block text-sm font-bold text-slate-700 mb-2">Build Goal</label>
-                   <select name="goal" value={formData.goal} onChange={handleInputChange} className="w-full px-5 py-4 rounded-xl border border-slate-200 bg-white font-medium text-slate-700">
+                   <select name="goal" value={formData.goal} onChange={handleInputChange} className="w-full px-5 py-4 rounded-xl border border-slate-200 bg-white font-medium text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500/20">
                       <option value="GENERATE_CODE">Complete Application</option>
                       <option value="GENERATE_COPY">Copy & Branding Pack</option>
                       <option value="PROVIDE_ADVISORY">Strategic Advisory</option>
                    </select>
                 </div>
                 <div>
-                   <label className="block text-sm font-bold text-slate-700 mb-2">Theme</label>
-                   <select name="theme" value={formData.theme} onChange={handleInputChange} className="w-full px-5 py-4 rounded-xl border border-slate-200 bg-white font-medium text-slate-700">
+                   <label className="block text-sm font-bold text-slate-700 mb-2">Project Theme</label>
+                   <select name="theme" value={formData.theme} onChange={handleInputChange} className="w-full px-5 py-4 rounded-xl border border-slate-200 bg-white font-medium text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500/20">
                       <option value="SAAS_DASHBOARD">SaaS Dashboard</option>
                       <option value="AGENCY">Agency Portfolio</option>
-                      <option value="MARKETPLACE">Marketplace</option>
+                      <option value="MARKETPLACE">Product Marketplace</option>
                       <option value="AI_TOOL_CATALOG">AI Tool Catalog</option>
                       <option value="FUNNEL_LANDER">Conversion Funnel</option>
+                      <option value="CONTENT_MEMBERSHIP">Content & Membership</option>
+                      <option value="LINK_IN_BIO">Link-in-Bio Card</option>
+                      <option value="ECOMMERCE">E-Commerce Store</option>
+                      <option value="PORTFOLIO">Personal Portfolio</option>
                    </select>
                 </div>
               </div>
