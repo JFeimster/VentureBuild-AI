@@ -8,7 +8,7 @@ import AuthDialog from './components/AuthDialog';
 import ChatBot from './components/ChatBot';
 import { supabase, isSupabaseConfigured } from './lib/supabase';
 import { FormData, ApiResponse, SavedProject } from './types';
-import { Box, Layers, Zap, Clock, FolderOpen, Trash2, ChevronRight, LogOut, User } from 'lucide-react';
+import { Box, Layers, Zap, Clock, FolderOpen, Trash2, ChevronRight, LogOut, User, LayoutDashboard } from 'lucide-react';
 import { downloadProjectZip } from './services/exportService';
 
 const App: React.FC = () => {
@@ -100,7 +100,16 @@ const App: React.FC = () => {
             <div className="bg-indigo-600 p-1.5 rounded-lg text-white"><Layers className="w-6 h-6" /></div>
             <span className="font-bold text-xl tracking-tight">Venture<span className="text-indigo-600">Build</span> AI</span>
           </div>
-          <button onClick={handleSignOut} className="text-slate-500 hover:text-red-600 transition p-2"><LogOut className="w-5 h-5" /></button>
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={handleReset}
+              className="flex items-center gap-2 text-sm font-bold text-slate-600 hover:text-indigo-600 transition bg-slate-100 px-4 py-2 rounded-xl"
+            >
+              <LayoutDashboard className="w-4 h-4" />
+              Dashboard
+            </button>
+            <button onClick={handleSignOut} className="text-slate-500 hover:text-red-600 transition p-2"><LogOut className="w-5 h-5" /></button>
+          </div>
         </header>
         <OutputDisplay data={result} projectName={currentProjectName} onReset={handleReset} onSave={handleSave} onDownload={handleDownload} />
         <ChatBot context={result} projectName={currentProjectName} />

@@ -24,7 +24,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
     e.preventDefault();
     const element = document.getElementById(id);
     if (element) {
-      const offset = 80; // offset for fixed header
+      const offset = 80;
       const bodyRect = document.body.getBoundingClientRect().top;
       const elementRect = element.getBoundingClientRect().top;
       const elementPosition = elementRect - bodyRect;
@@ -48,47 +48,52 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
   return (
     <div className="min-h-screen bg-[#030014] text-white font-sans selection:bg-indigo-500 selection:text-white overflow-x-hidden relative">
       
-      {/* --- BACKGROUND FX --- */}
+      {/* --- PREMIUM BACKGROUND ENGINE --- */}
       <div className="fixed inset-0 z-0 pointer-events-none">
-         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-indigo-800/20 rounded-full blur-[120px] animate-pulse"></div>
-         <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-purple-800/20 rounded-full blur-[120px] animate-pulse" style={{animationDelay: '4s'}}></div>
-         <div className="absolute top-[40%] left-[50%] -translate-x-1/2 w-[40%] h-[40%] bg-blue-600/10 rounded-full blur-[100px]"></div>
-         <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]"></div>
-         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 mix-blend-soft-light"></div>
+         {/* Deep Glows */}
+         <div className="absolute top-[-5%] left-[-5%] w-[40%] h-[40%] bg-indigo-600/20 rounded-full blur-[140px] animate-pulse duration-[8000ms]"></div>
+         <div className="absolute bottom-[10%] right-[-5%] w-[45%] h-[45%] bg-purple-700/15 rounded-full blur-[160px] animate-pulse duration-[10000ms]" style={{animationDelay: '2s'}}></div>
+         <div className="absolute top-[30%] left-[20%] w-[30%] h-[30%] bg-blue-600/10 rounded-full blur-[120px]"></div>
+         
+         {/* Grid with Radial Mask */}
+         <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)] bg-[size:32px_32px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]"></div>
+         
+         {/* Moving Particles Placeholder (CSS only) */}
+         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] mix-blend-overlay"></div>
       </div>
 
       {/* --- NAVIGATION --- */}
-      <nav className={`fixed top-0 w-full z-50 transition-all duration-500 border-b ${scrollY > 20 ? 'bg-[#030014]/70 backdrop-blur-xl border-white/10 py-3 shadow-lg shadow-indigo-500/5' : 'bg-transparent border-transparent py-6'}`}>
+      <nav className={`fixed top-0 w-full z-50 transition-all duration-700 border-b ${scrollY > 20 ? 'bg-[#030014]/60 backdrop-blur-2xl border-white/10 py-3 shadow-2xl' : 'bg-transparent border-transparent py-6'}`}>
         <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
           <div className="flex items-center gap-3 group cursor-pointer" onClick={scrollToTop}>
             <div className="relative">
-                <div className="absolute inset-0 bg-indigo-500 blur-md opacity-0 group-hover:opacity-100 transition duration-500"></div>
-                <div className="bg-gradient-to-br from-indigo-600 to-violet-600 p-2 rounded-xl relative z-10 border border-white/10 shadow-inner">
+                <div className="absolute inset-0 bg-indigo-500 blur-xl opacity-0 group-hover:opacity-40 transition duration-700"></div>
+                <div className="bg-gradient-to-br from-indigo-600 to-violet-600 p-2.5 rounded-2xl relative z-10 border border-white/20 shadow-xl transform group-hover:rotate-12 transition-transform duration-500">
                     <Layers className="w-5 h-5 text-white" />
                 </div>
             </div>
-            <span className="font-bold text-xl tracking-tight text-white/90 group-hover:text-white transition">Venture<span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400 font-extrabold">Build</span></span>
+            <span className="font-bold text-2xl tracking-tighter text-white/90 group-hover:text-white transition-colors">Venture<span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400 font-black">Build</span></span>
           </div>
           
-          <div className="flex items-center gap-8">
-            <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-400">
-               <a href="#how-it-works" onClick={(e) => scrollToSection(e, 'how-it-works')} className="hover:text-white transition relative group py-1">Process</a>
-               <a href="#features" onClick={(e) => scrollToSection(e, 'features')} className="hover:text-white transition relative group py-1">Features</a>
-               <a href="#testimonials" onClick={(e) => scrollToSection(e, 'testimonials')} className="hover:text-white transition relative group py-1">Reviews</a>
+          <div className="flex items-center gap-10">
+            <div className="hidden lg:flex items-center gap-10 text-xs font-black uppercase tracking-[0.15em] text-slate-400">
+               <a href="#how-it-works" onClick={(e) => scrollToSection(e, 'how-it-works')} className="hover:text-white transition-colors relative group py-1">Process</a>
+               <a href="#features" onClick={(e) => scrollToSection(e, 'features')} className="hover:text-white transition-colors relative group py-1">Features</a>
+               <a href="#testimonials" onClick={(e) => scrollToSection(e, 'testimonials')} className="hover:text-white transition-colors relative group py-1">Social Proof</a>
             </div>
             
             <div className="flex items-center gap-4">
                 <button 
                   onClick={onGetStarted}
-                  className="text-sm font-medium text-slate-300 hover:text-white transition hidden sm:block"
+                  className="text-xs font-black uppercase tracking-widest text-slate-300 hover:text-white transition-colors hidden sm:block"
                 >
                   Log In
                 </button>
                 <button 
                   onClick={onGetStarted}
-                  className="group relative px-5 py-2.5 rounded-full bg-white text-slate-950 font-bold text-sm overflow-hidden transition-all hover:shadow-[0_0_20px_rgba(255,255,255,0.4)] hover:scale-105 active:scale-95"
+                  className="group relative px-6 py-3 rounded-2xl bg-white text-slate-950 font-black text-xs uppercase tracking-widest overflow-hidden transition-all hover:shadow-[0_0_30px_rgba(255,255,255,0.3)] hover:-translate-y-0.5 active:translate-y-0"
                 >
-                  <span className="relative z-10 flex items-center gap-2">Get Started <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" /></span>
+                  <span className="relative z-10 flex items-center gap-2">Build Now <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" /></span>
                 </button>
             </div>
           </div>
@@ -96,187 +101,161 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
       </nav>
 
       {/* --- HERO SECTION --- */}
-      <section className="relative pt-48 pb-24 overflow-hidden z-10">
+      <section className="relative pt-56 pb-32 overflow-hidden z-10">
         <div className="max-w-7xl mx-auto px-6 text-center relative">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-md text-indigo-300 text-xs font-bold uppercase tracking-wider mb-8 animate-fade-in shadow-[0_0_15px_rgba(79,70,229,0.3)] hover:bg-white/10 transition cursor-default">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
-            </span>
-            Generative UI v2.5 Live
+          
+          {/* Neon Chip */}
+          <div className="inline-flex items-center gap-3 px-4 py-2 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-xl text-indigo-300 text-[10px] font-black uppercase tracking-[0.2em] mb-10 animate-fade-in shadow-2xl hover:border-indigo-500/30 transition-colors">
+            <Sparkles className="w-3 h-3 text-indigo-400" />
+            AI Venture Partner v2.5
           </div>
           
-          <h1 className="text-5xl md:text-8xl font-black tracking-tight mb-8 leading-[1.1] animate-slide-up">
-            Build your <br className="hidden md:block" />
-            <span className="relative inline-block px-2">
-                <span className="absolute inset-0 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 blur-xl transform -skew-y-3"></span>
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-200 via-white to-purple-200 relative z-10 drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">Startup Vision</span>
+          <h1 className="text-6xl md:text-9xl font-black tracking-tighter mb-10 leading-[0.9] animate-slide-up">
+            Architect your <br className="hidden md:block" />
+            <span className="relative inline-block mt-4">
+                <span className="absolute inset-0 bg-gradient-to-r from-indigo-500/30 to-purple-500/30 blur-[60px] transform -skew-x-12"></span>
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-indigo-100 to-slate-400 relative z-10">Dream Venture.</span>
             </span>
-            <br /> in Seconds.
           </h1>
           
-          <p className="text-lg md:text-2xl text-slate-400 max-w-3xl mx-auto mb-12 leading-relaxed animate-slide-up-delay-1 font-light">
-            Stop coding boilerplate. Let our <span className="text-indigo-200 font-medium">Gemini-powered engine</span> generate your landing page, strategic copy, and full codebase instantly.
+          <p className="text-lg md:text-2xl text-slate-400 max-w-3xl mx-auto mb-16 leading-relaxed animate-slide-up-delay-1 font-medium">
+            Deploy full-stack codebases, conversion-optimized copy, <br className="hidden sm:block"/> and strategic branding in <span className="text-white border-b-2 border-indigo-500/50">under 60 seconds</span>.
           </p>
           
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6 animate-slide-up-delay-2">
             <button 
               onClick={onGetStarted}
-              className="w-full sm:w-auto relative group overflow-hidden bg-indigo-600 text-white font-bold text-lg px-8 py-4 rounded-xl transition-all shadow-[0_10px_40px_-10px_rgba(79,70,229,0.5)] hover:shadow-[0_20px_60px_-10px_rgba(79,70,229,0.6)] hover:-translate-y-1"
+              className="w-full sm:w-auto relative group overflow-hidden bg-indigo-600 text-white font-black text-sm uppercase tracking-widest px-10 py-5 rounded-2xl transition-all shadow-[0_20px_50px_-10px_rgba(79,70,229,0.5)] hover:shadow-[0_30px_70px_-10px_rgba(79,70,229,0.7)] hover:-translate-y-1.5"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 opacity-80 group-hover:opacity-100 transition-opacity"></div>
-              <span className="relative flex items-center justify-center gap-2">Start Building Free <Rocket className="w-5 h-5 group-hover:rotate-45 transition-transform duration-300" /></span>
+              <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 via-indigo-500 to-indigo-600 group-hover:scale-110 transition-transform duration-700"></div>
+              <span className="relative flex items-center justify-center gap-3">Create Project <Rocket className="w-5 h-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" /></span>
             </button>
             <button 
               onClick={(e) => scrollToSection(e, 'how-it-works')}
-              className="w-full sm:w-auto bg-[#0F0B29]/50 backdrop-blur-sm hover:bg-white/5 text-white border border-white/10 font-bold text-lg px-8 py-4 rounded-xl transition flex items-center justify-center gap-3 group"
+              className="w-full sm:w-auto glass-panel bg-white/5 backdrop-blur-3xl hover:bg-white/10 text-white border border-white/10 font-black text-sm uppercase tracking-widest px-10 py-5 rounded-2xl transition-all flex items-center justify-center gap-3 group"
             >
-              <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-indigo-500 group-hover:scale-110 transition duration-300 shadow-inner">
-                 <Play className="w-3 h-3 fill-current ml-0.5" />
-              </div>
-              See it in Action
+              <Play className="w-4 h-4 fill-current group-hover:scale-125 transition-transform" />
+              Watch Demo
             </button>
           </div>
         </div>
       </section>
 
-      {/* --- TRUSTED BY --- */}
-      <section className="py-10 border-y border-white/5 bg-white/[0.02] backdrop-blur-sm relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-6 text-center">
-            <p className="text-xs font-bold text-slate-500 uppercase tracking-[0.2em] mb-8">Trusted by 10,000+ Founders</p>
-            <div className="flex flex-wrap justify-center items-center gap-12 md:gap-24 opacity-50 grayscale hover:grayscale-0 transition-all duration-700">
-               <div className="flex items-center gap-2 font-bold text-xl text-white hover:text-indigo-300 transition-colors cursor-default"><Globe className="w-6 h-6" /> Atlas</div>
-               <div className="flex items-center gap-2 font-bold text-xl text-white hover:text-purple-300 transition-colors cursor-default"><Cpu className="w-6 h-6" /> Vertex</div>
-               <div className="flex items-center gap-2 font-bold text-xl text-white hover:text-yellow-300 transition-colors cursor-default"><Zap className="w-6 h-6" /> BoltShift</div>
-               <div className="flex items-center gap-2 font-bold text-xl text-white hover:text-cyan-300 transition-colors cursor-default"><Layers className="w-6 h-6" /> LayerUI</div>
-               <div className="flex items-center gap-2 font-bold text-xl text-white hover:text-green-300 transition-colors cursor-default"><Terminal className="w-6 h-6" /> CodeFlow</div>
-            </div>
-        </div>
-      </section>
-
-      {/* --- CODE PREVIEW (GLASS WINDOW) --- */}
-      <section className="py-32 relative z-10 scroll-mt-24" id="how-it-works">
-        <div className="max-w-7xl mx-auto px-6">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-5xl font-bold mb-6">From <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Prompt</span> to <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">Product</span></h2>
-              <p className="text-slate-400 max-w-2xl mx-auto text-lg">Describe your idea in plain English. Our AI architects the database, writes the copy, and generates the Next.js code.</p>
-            </div>
-
-            <div className="relative rounded-2xl border border-white/10 bg-[#0A0A1F]/60 backdrop-blur-2xl shadow-[0_0_50px_-10px_rgba(79,70,229,0.2)] overflow-hidden animate-slide-up-delay-2 group hover:shadow-[0_0_70px_-10px_rgba(79,70,229,0.3)] transition duration-500">
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-px bg-gradient-to-r from-transparent via-indigo-500 to-transparent opacity-50"></div>
-                <div className="bg-white/5 px-6 py-4 border-b border-white/5 flex items-center justify-between">
-                    <div className="flex gap-2">
-                        <div className="w-3 h-3 rounded-full bg-red-500/50 hover:bg-red-500 transition-colors shadow-inner"></div>
-                        <div className="w-3 h-3 rounded-full bg-yellow-500/50 hover:bg-yellow-500 transition-colors shadow-inner"></div>
-                        <div className="w-3 h-3 rounded-full bg-green-500/50 hover:bg-green-500 transition-colors shadow-inner"></div>
+      {/* --- GLASS CODE PREVIEW --- */}
+      <section className="py-24 relative z-10 scroll-mt-32" id="how-it-works">
+        <div className="max-w-6xl mx-auto px-6">
+            <div className="relative rounded-[32px] border border-white/10 bg-[#0A0A1F]/40 backdrop-blur-[40px] shadow-[0_0_100px_-20px_rgba(79,70,229,0.3)] overflow-hidden animate-slide-up-delay-2 group">
+                {/* Header Bar */}
+                <div className="bg-white/5 px-8 py-5 border-b border-white/10 flex items-center justify-between">
+                    <div className="flex gap-2.5">
+                        <div className="w-3.5 h-3.5 rounded-full bg-red-500/30"></div>
+                        <div className="w-3.5 h-3.5 rounded-full bg-yellow-500/30"></div>
+                        <div className="w-3.5 h-3.5 rounded-full bg-green-500/30"></div>
                     </div>
-                    <div className="text-xs font-mono text-slate-500 flex items-center gap-2">
-                        <Terminal className="w-3 h-3" /> generate_startup.tsx
+                    <div className="flex items-center gap-3 bg-white/5 px-4 py-1.5 rounded-full border border-white/10">
+                        <Terminal className="w-3 h-3 text-indigo-400" />
+                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">venture-builder.ts</span>
                     </div>
-                    <div className="w-10"></div>
+                    <div className="w-12"></div>
                 </div>
 
-                <div className="grid md:grid-cols-2">
-                    <div className="p-8 border-r border-white/5 hidden md:block font-mono text-sm leading-relaxed relative">
-                        <div className="absolute inset-0 bg-gradient-to-b from-indigo-500/5 to-transparent pointer-events-none"></div>
-                        <div className="space-y-6 relative z-10">
-                            <div>
-                                <div className="text-slate-500 mb-1">// 1. Define your vision</div>
-                                <div className="flex items-center gap-2 text-purple-300">
-                                    <span className="text-indigo-400">const</span> <span className="text-yellow-200">idea</span> <span className="text-white">=</span> <span className="text-green-400">"SaaS for dog walkers"</span>;
-                                </div>
+                <div className="grid md:grid-cols-5">
+                    {/* Code Editor Mock */}
+                    <div className="md:col-span-3 p-10 font-mono text-sm leading-[1.8] border-r border-white/10 bg-black/20">
+                        <div className="space-y-4">
+                            <div className="flex gap-4">
+                                <span className="text-slate-600 select-none">01</span>
+                                <p><span className="text-purple-400">import</span> {'{ Build }'} <span className="text-purple-400">from</span> <span className="text-emerald-400">"@venture-build/ai"</span></p>
                             </div>
-                            <div>
-                                <div className="text-slate-500 mb-1">// 2. Select stack</div>
-                                <div className="flex items-center gap-2 text-purple-300">
-                                    <span className="text-indigo-400">const</span> <span className="text-yellow-200">stack</span> <span className="text-white">=</span> <span className="text-blue-400">"Next.js"</span>;
-                                </div>
+                            <div className="flex gap-4">
+                                <span className="text-slate-600 select-none">02</span>
+                                <p><span className="text-indigo-400">const</span> project = <span className="text-purple-400">await</span> Build.init(<span className="text-emerald-400">"SaaS Dashboard"</span>)</p>
                             </div>
-                            <div>
-                                <div className="text-slate-500 mb-1">// 3. Generate</div>
-                                <div className="flex items-center gap-2">
-                                    <span className="text-purple-300">await</span> <span className="text-indigo-300">VentureBuild</span>.<span className="text-yellow-200">launch</span>(idea, stack);
-                                </div>
+                            <div className="flex gap-4">
+                                <span className="text-slate-600 select-none">03</span>
+                                <p><span className="text-slate-500">// AI analyzing strategy & moat...</span></p>
                             </div>
-                            <div className="mt-8 p-4 rounded-lg bg-black/40 border border-white/5 text-slate-400 shadow-inner">
-                                <div className="flex items-center gap-3 mb-2"><div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div><span>Analyzing market...</span></div>
-                                <div className="flex items-center gap-3 mb-2"><div className="w-2 h-2 bg-green-500 rounded-full animate-pulse delay-75"></div><span>Generating copy...</span></div>
-                                <div className="flex items-center gap-3 mb-2"><div className="w-2 h-2 bg-green-500 rounded-full animate-pulse delay-150"></div><span>Compiling components...</span></div>
-                                <div className="text-green-400 mt-4 font-bold">_ Ready to deploy.</div>
+                            <div className="flex gap-4">
+                                <span className="text-slate-600 select-none">04</span>
+                                <p><span className="text-indigo-400">project</span>.generateCode({'{'} stack: <span className="text-emerald-400">'Next.js'</span> {'}'})</p>
+                            </div>
+                            <div className="flex gap-4">
+                                <span className="text-slate-600 select-none">05</span>
+                                <div className="flex items-center gap-1">
+                                    <span className="text-white font-bold">Build Successful</span>
+                                    <span className="w-2 h-5 bg-indigo-500 animate-pulse"></span>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <div className="p-8 bg-gradient-to-br from-[#0F0B29] to-[#050510] flex items-center justify-center min-h-[400px] relative overflow-hidden">
-                         <div className="text-center relative z-10 group-hover:scale-105 transition duration-500">
-                             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-indigo-500 rounded-full blur-[80px] opacity-20 animate-pulse"></div>
-                             <div className="w-24 h-24 bg-gradient-to-tr from-indigo-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-2xl mx-auto mb-8 relative border border-white/20">
-                                <Rocket className="w-12 h-12 text-white" />
-                             </div>
-                             <h3 className="text-2xl font-bold text-white mb-2">Production Ready</h3>
-                             <p className="text-slate-400 max-w-xs mx-auto text-sm leading-relaxed">Full Tailwind CSS code, responsive components, and strategic copy generated in one click.</p>
-                         </div>
+                    {/* Live Preview Side */}
+                    <div className="md:col-span-2 p-10 flex flex-col items-center justify-center text-center bg-gradient-to-br from-indigo-600/10 to-transparent">
+                        <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center mb-8 shadow-[0_0_50px_rgba(255,255,255,0.2)]">
+                            <Rocket className="w-10 h-10 text-indigo-600" />
+                        </div>
+                        <h3 className="text-2xl font-black mb-4">Production Core</h3>
+                        <p className="text-slate-400 text-sm leading-relaxed max-w-[220px]">
+                            Clean, semantic code architecture that ships to Vercel in one click.
+                        </p>
                     </div>
                 </div>
             </div>
         </div>
       </section>
 
-      {/* --- FEATURE GRID --- */}
-      <section className="py-24 relative z-10 scroll-mt-24" id="features">
+      {/* --- FEATURES GRID --- */}
+      <section className="py-32 relative z-10 scroll-mt-32" id="features">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-5xl font-bold mb-6">Built for speed, <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-indigo-400">designed for growth</span></h2>
-            <p className="text-slate-400 max-w-2xl mx-auto text-lg">Stop wasting weeks on boilerplate. Focus on your business logic while we handle the foundation.</p>
+          <div className="text-center mb-20">
+            <h2 className="text-4xl md:text-6xl font-black tracking-tighter mb-6">Built for <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-emerald-400">Hypergrowth</span></h2>
+            <p className="text-slate-400 max-w-2xl mx-auto text-lg font-medium">Everything you need to move from "Maybe" to "Launched".</p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="group relative h-full bg-[#0A0A1F] rounded-xl p-8 border border-white/5 hover:border-indigo-500/30 transition overflow-hidden shadow-2xl">
-                <div className="w-14 h-14 bg-indigo-500/10 rounded-xl flex items-center justify-center text-indigo-400 mb-6 group-hover:scale-110 transition group-hover:bg-indigo-500/20 group-hover:text-white">
-                    <Code2 className="w-7 h-7" />
-                </div>
-                <h3 className="text-xl font-bold mb-3 text-white">Instant Codebase</h3>
-                <p className="text-slate-400 leading-relaxed text-sm">Generate clean, responsive Next.js or React codebases tailored to specific niches instantly.</p>
-            </div>
-            <div className="group relative h-full bg-[#0A0A1F] rounded-xl p-8 border border-white/5 hover:border-purple-500/30 transition overflow-hidden shadow-2xl">
-                <div className="w-14 h-14 bg-purple-500/10 rounded-xl flex items-center justify-center text-purple-400 mb-6 group-hover:scale-110 transition group-hover:bg-purple-500/20 group-hover:text-white">
-                    <Sparkles className="w-7 h-7" />
-                </div>
-                <h3 className="text-xl font-bold mb-3 text-white">Strategic Copy</h3>
-                <p className="text-slate-400 leading-relaxed text-sm">Get benefit-driven headlines, value propositions, and CTAs that actually convert, written by AI.</p>
-            </div>
-            <div className="group relative h-full bg-[#0A0A1F] rounded-xl p-8 border border-white/5 hover:border-emerald-500/30 transition overflow-hidden shadow-2xl">
-                <div className="w-14 h-14 bg-emerald-500/10 rounded-xl flex items-center justify-center text-emerald-400 mb-6 group-hover:scale-110 transition group-hover:bg-emerald-500/20 group-hover:text-white">
-                    <Terminal className="w-7 h-7" />
-                </div>
-                <h3 className="text-xl font-bold mb-3 text-white">Direct Export</h3>
-                <p className="text-slate-400 leading-relaxed text-sm">Push directly to GitHub or deploy live to Vercel. From idea to live URL in under 5 minutes.</p>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <GlassCard 
+                icon={Code2} 
+                color="indigo" 
+                title="Full-Stack Repos" 
+                description="Tailwind CSS, Next.js, and clean React components ready for your first commit."
+            />
+            <GlassCard 
+                icon={Sparkles} 
+                color="emerald" 
+                title="Psychological Copy" 
+                description="AI-generated headlines and value props rooted in high-conversion sales models."
+            />
+            <GlassCard 
+                icon={Zap} 
+                color="purple" 
+                title="Direct Deployment" 
+                description="Push directly to GitHub or deploy live to Vercel without ever leaving the dashboard."
+            />
           </div>
         </div>
       </section>
 
       {/* --- TESTIMONIALS --- */}
-      <section className="py-24 border-t border-white/5 bg-[#030014] relative overflow-hidden" id="testimonials">
+      <section className="py-32 border-t border-white/5 relative overflow-hidden" id="testimonials">
          <div className="max-w-7xl mx-auto px-6 relative z-10">
-            <h2 className="text-3xl md:text-5xl font-bold mb-16 text-center">Loved by <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">Builders</span></h2>
+            <h2 className="text-4xl md:text-5xl font-black tracking-tighter mb-20 text-center">Loved by <span className="text-indigo-400">Founders</span></h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                {[
-                 { name: "Sarah J.", role: "Founder, TechFlow", text: "I built my MVP landing page in 3 minutes. The copy was actually better than what I paid a freelancer for last year." },
-                 { name: "David C.", role: "Indie Hacker", text: "The Next.js export is a game changer. It sets up the folder structure, components, and routing perfectly." },
-                 { name: "Elena R.", role: "Agency Owner", text: "We use this to mock up client concepts during sales calls. It blows them away every time." }
+                 { name: "Sarah J.", role: "CEO, TechFlow", text: "I launched my landing page in 5 minutes. The strategic copy was significantly better than our internal drafts." },
+                 { name: "David C.", role: "Indie Hacker", text: "The code quality is surprisingly clean. It's not just a bunch of div tags; it's a real foundation." },
+                 { name: "Elena R.", role: "Agency Director", text: "We use this for client prototypes. It has cut our pre-sales mockup time by 90%." }
                ].map((review, i) => (
-                 <div key={i} className="bg-white/[0.03] border border-white/5 p-8 rounded-2xl hover:bg-white/[0.06] transition duration-500 backdrop-blur-sm">
-                    <div className="flex gap-1 mb-4 text-yellow-400">
+                 <div key={i} className="glass-panel p-10 rounded-[32px] border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-all duration-500 group">
+                    <div className="flex gap-1.5 mb-6 text-indigo-400">
                        {[...Array(5)].map((_, i) => <Star key={i} className="w-4 h-4 fill-current" />)}
                     </div>
-                    <p className="text-slate-300 mb-6 leading-relaxed italic">"{review.text}"</p>
+                    <p className="text-slate-300 mb-10 leading-relaxed italic font-medium">"{review.text}"</p>
                     <div className="flex items-center gap-4">
-                       <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center font-bold text-white text-sm">
+                       <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center font-black text-white text-sm shadow-xl">
                           {review.name.charAt(0)}
                        </div>
                        <div>
-                          <div className="font-bold text-white">{review.name}</div>
-                          <div className="text-xs text-slate-500 uppercase tracking-wider">{review.role}</div>
+                          <div className="font-black text-white text-sm uppercase tracking-widest">{review.name}</div>
+                          <div className="text-[10px] text-indigo-400 uppercase font-black tracking-widest">{review.role}</div>
                        </div>
                     </div>
                  </div>
@@ -285,74 +264,56 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
          </div>
       </section>
 
-      {/* --- FAQ --- */}
-      <section className="py-24 bg-[#050510] border-t border-white/5">
-        <div className="max-w-3xl mx-auto px-6">
-           <h2 className="text-3xl font-bold mb-12 text-center">Common Questions</h2>
-           <div className="space-y-4">
-              {[
-                { question: "Is the code really production-ready?", answer: "Yes. We generate clean, semantic Next.js or React code using Tailwind CSS. It is ready for deployment." },
-                { question: "Can I use my own design system?", answer: "Currently, we support Tailwind utilities. Custom tokens are on the roadmap." },
-                { question: "Do I own the generated IP?", answer: "Absolutely. Everything generated—code, copy, and assets—is 100% yours to use and modify." },
-                { question: "Is it free to start?", answer: "Yes, you can generate previews for free. Sign in to save or export projects." }
-              ].map((faq, i) => (
-                <div key={i} className={`border rounded-xl bg-white/[0.02] overflow-hidden transition-all duration-300 ${openFaqIndex === i ? 'border-indigo-500/50 bg-white/[0.04]' : 'border-white/10'}`}>
-                   <button 
-                      onClick={() => toggleFaq(i)}
-                      className="w-full flex items-center justify-between p-6 text-left hover:bg-white/5 transition outline-none"
-                   >
-                      <span className="font-medium text-lg text-slate-200">{faq.question}</span>
-                      <ChevronDown className={`w-5 h-5 text-slate-400 transition-transform duration-300 ${openFaqIndex === i ? 'rotate-180 text-indigo-400' : ''}`} />
-                   </button>
-                   <div className={`overflow-hidden transition-all duration-300 ease-in-out ${openFaqIndex === i ? 'max-h-48 opacity-100' : 'max-h-0 opacity-0'}`}>
-                      <div className="p-6 pt-0 text-slate-400 leading-relaxed border-t border-white/5 mt-2">
-                         {faq.answer}
-                      </div>
-                   </div>
-                </div>
-              ))}
-           </div>
-        </div>
-      </section>
-
-      {/* --- CTA SECTION --- */}
-      <section className="py-32 relative overflow-hidden" id="pricing">
-         <div className="absolute inset-0 bg-gradient-to-b from-[#030014] to-indigo-950/20"></div>
-         <div className="max-w-4xl mx-auto px-6 text-center relative z-10">
-            <h2 className="text-4xl md:text-6xl font-bold mb-8 tracking-tight">Ready to ship your next big idea?</h2>
-            <p className="text-xl text-slate-400 mb-10 max-w-2xl mx-auto">Join thousands of founders building faster with AI. No credit card required.</p>
+      {/* --- FINAL CTA --- */}
+      <section className="py-40 relative overflow-hidden text-center">
+         <div className="absolute inset-0 bg-gradient-to-b from-transparent to-indigo-900/10"></div>
+         <div className="max-w-4xl mx-auto px-6 relative z-10">
+            <h2 className="text-5xl md:text-8xl font-black tracking-tighter mb-10">The future of <span className="text-indigo-500">Execution.</span></h2>
+            <p className="text-xl text-slate-400 mb-16 max-w-2xl mx-auto font-medium">No more excuses. Build your venture tonight.</p>
             <button 
               onClick={onGetStarted}
-              className="bg-white text-indigo-950 font-black text-xl px-12 py-5 rounded-2xl hover:scale-105 transition shadow-[0_0_40px_rgba(255,255,255,0.3)] flex items-center justify-center gap-3 mx-auto group"
+              className="bg-white text-indigo-950 font-black text-xl uppercase tracking-widest px-14 py-6 rounded-3xl hover:scale-105 transition-all shadow-[0_0_60px_rgba(255,255,255,0.2)] flex items-center justify-center gap-4 mx-auto group"
             >
-              Start Building Now <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+              Get Started <ArrowRight className="w-6 h-6 group-hover:translate-x-2 transition-transform" />
             </button>
-            <div className="mt-10 flex items-center justify-center gap-8 text-sm text-slate-500 font-medium">
-               <span className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-emerald-500" /> Free Forever Plan</span>
-               <span className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-emerald-500" /> No Lock-in</span>
-            </div>
          </div>
       </section>
 
       {/* --- FOOTER --- */}
-      <footer className="py-12 border-t border-white/5 bg-[#02000d] text-slate-500 text-sm relative z-10">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
+      <footer className="py-16 border-t border-white/5 bg-black/40 backdrop-blur-3xl text-slate-500 text-[10px] font-black uppercase tracking-[0.2em] relative z-10">
+        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-10">
            <div className="flex items-center gap-3 cursor-pointer group" onClick={scrollToTop}>
-              <div className="bg-white/5 p-2 rounded-lg group-hover:bg-indigo-600/20 transition-colors">
-                 <Layers className="w-5 h-5 text-indigo-500" />
-              </div>
-              <span className="font-bold text-slate-300 group-hover:text-white transition-colors">VentureBuild AI</span>
+              <Layers className="w-5 h-5 text-indigo-500 group-hover:text-white transition-colors" />
+              <span className="text-slate-300 group-hover:text-white transition-colors">VentureBuild AI</span>
            </div>
-           <div className="flex gap-8">
-              <a href="#" className="hover:text-white transition" onClick={(e) => e.preventDefault()}>Terms</a>
-              <a href="#" className="hover:text-white transition" onClick={(e) => e.preventDefault()}>Privacy</a>
-              <a href="https://twitter.com/venturebuildai" target="_blank" rel="noopener noreferrer" className="hover:text-white transition">Twitter</a>
+           <div className="flex gap-10">
+              <a href="#" className="hover:text-white transition-colors">Terms</a>
+              <a href="#" className="hover:text-white transition-colors">Privacy</a>
+              <a href="#" className="hover:text-white transition-colors">Twitter</a>
            </div>
-           <p className="opacity-60">&copy; {new Date().getFullYear()} Venture Build AI.</p>
+           <p className="opacity-40">&copy; {new Date().getFullYear()} Venture Build AI.</p>
         </div>
       </footer>
     </div>
   );
+};
+
+const GlassCard: React.FC<{ icon: any; title: string; description: string; color: string }> = ({ icon: Icon, title, description, color }) => {
+    const colorClasses: Record<string, string> = {
+        indigo: "text-indigo-400 bg-indigo-500/10 border-indigo-500/20",
+        emerald: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
+        purple: "text-purple-400 bg-purple-500/10 border-purple-500/20"
+    };
+
+    return (
+        <div className="glass-panel p-10 rounded-[32px] border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-all duration-700 hover:-translate-y-2 group">
+            <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-8 border transition-all duration-700 group-hover:scale-110 ${colorClasses[color]}`}>
+                <Icon className="w-8 h-8" />
+            </div>
+            <h3 className="text-2xl font-black mb-4 group-hover:text-white transition-colors">{title}</h3>
+            <p className="text-slate-400 text-sm leading-relaxed font-medium">{description}</p>
+        </div>
+    );
 };
 
 export default LandingPage;
