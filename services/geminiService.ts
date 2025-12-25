@@ -46,12 +46,18 @@ Your output must be a valid JSON object containing a "Site Spec", a "Section-by-
 *   **STATIC_WEBSITE:**
     *   **Files:** \`index.html\`, \`styles.css\`, \`README.md\`.
     *   **Design:** Modern, clean, responsive.
-    *   **Animations:** Use \`reveal-on-scroll\` class on sections and \`parallax-bg\` on hero/banner backgrounds.
+    *   **Animations:** Use \`reveal-on-scroll\` class on sections, \`parallax-bg\` on hero/banner backgrounds, and \`hover-lift\` on cards.
+    *   **INTEGRATION (Tally Forms):** For any "Contact" or "Waitlist" section, DO NOT create a standard HTML form. Instead, embed a Tally Form iframe using this generic source: \`https://tally.so/embed/w7KEWZ?alignLeft=1&hideTitle=1&transparentBackground=1&dynamicHeight=1\`. Wrap it in a container.
 
 *   **NEXT_JS:**
     *   Standard App Router structure.
     *   Include \`README.md\`.
     *   Ensure metadata export in \`layout.tsx\` includes title and description.
+    *   **INTEGRATION (Supabase Auth):** If the theme is 'SAAS_DASHBOARD', 'CONTENT_MEMBERSHIP', or 'AI_TOOL_CATALOG':
+        1.  Create \`utils/supabase/server.ts\` (server client) and \`utils/supabase/client.ts\` (browser client) placeholders.
+        2.  Create \`middleware.ts\` for session management.
+        3.  Add a comment in \`README.md\` about setting \`NEXT_PUBLIC_SUPABASE_URL\` and \`NEXT_PUBLIC_SUPABASE_ANON_KEY\`.
+        4.  In the navbar, add a "Login" button that links to \`/login\`.
 
 *   **EMBED_WIDGET:**
     *   **Files:** \`widget.js\`, \`widget.css\`.
@@ -77,7 +83,9 @@ Your output must be a valid JSON object containing a "Site Spec", a "Section-by-
       },
       "aiCraftedStrategicCopy": {
          // Standard fields...
-         "callsToAction": [ ... ]
+         "callsToAction": [
+            // REQUIREMENT: Generate at least 3 distinct CTAs (e.g. Primary, Secondary, Footer/Pricing)
+         ]
       },
       "preliminaryBrandAssetPack": {
          "curatedColorPalette": [ ... ],
@@ -85,14 +93,14 @@ Your output must be a valid JSON object containing a "Site Spec", a "Section-by-
          "imageAndIconBriefs": [
             { 
               "section": "Hero", 
-              "brief": "Type: [Photography/3D Render/Illustration]. Mood: [Professional/Energetic/Calm]. Content: [Specific details of the scene]. Style: [Minimalist/Cinematic/Abstract]. (Must align with brand voice: {{brandVoice}})"
-            },
+              "brief": "Detailed prompt: [Type: Photography/Illustration/3D]. [Mood: Professional/Energetic/Calm]. [Description: A wide shot of...]. [Style: Isometric/Minimalist/Cinematic]. (Must align with brand voice: {{brandVoice}})"
+            }
             // REQUIREMENT: You MUST generate at least 4 distinct briefs covering different visual types (e.g., 1 Photorealistic Scene, 1 Abstract 3D shape, 1 UI Mockup, 1 Icon Set).
          ],
          "generatedImages": [
-            { "section": "Hero", "imageUrl": "https://placehold.co/600x400/png?text=Hero+Image" },
-            { "section": "Features", "imageUrl": "https://placehold.co/400x300/png?text=Features" }
-            // MANDATORY: Generate 2-3 placeholder image objects for key sections (Hero, Features, etc.)
+            { "section": "Hero", "imageUrl": "https://placehold.co/1200x600/png?text=Hero+Image" },
+            { "section": "Features", "imageUrl": "https://placehold.co/800x600/png?text=Feature+Highlight" }
+            // MANDATORY: Generate 2-3 placeholder image objects for key sections (e.g., Hero, Features).
          ]
       }
     }
@@ -124,11 +132,11 @@ export const generateVentureBuild = async (data: FormData): Promise<ApiResponse>
   // Refine the goal description passed to the AI
   let goalDescription = "Generate Code/Website";
   if (data.goal === 'PROVIDE_ADVISORY') {
-    goalDescription = "Provide an Advisory Report";
+    goalDescription = `Provide an Advisory Report for a ${data.theme} project`;
   } else if (data.goal === 'GENERATE_COPY') {
-    goalDescription = `Generate High-Converting Copy for the provided template URL: ${data.templateUrl}`;
+    goalDescription = `Generate High-Converting Copy for the provided template URL: ${data.templateUrl}. Context: ${data.theme} theme.`;
   } else if (data.techStack === 'TEMPLATE_REPLICA') {
-    goalDescription = `Generate a Code Replica mimicking the structure of: ${data.templateUrl}`;
+    goalDescription = `Generate a Code Replica mimicking the structure of: ${data.templateUrl}. Context: ${data.theme} theme.`;
   } else {
     goalDescription = `Generate a ${data.techStack} codebase for a ${data.theme} project`;
   }

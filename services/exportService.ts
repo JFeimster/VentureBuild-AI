@@ -1,6 +1,86 @@
 
 import JSZip from 'jszip';
-import { ApiResponse, AutomatedBuildPackage, StrategicAdvisoryReport, GeneratedCodebase } from '../types';
+import { ApiResponse, AutomatedBuildPackage, StrategicAdvisoryReport, GeneratedCodebase, CodeFile } from '../types';
+
+/**
+ * Prepares a flat array of files for the project, regardless of output type.
+ * This is used by both the ZIP downloader and the Vercel deployer.
+ */
+export const generateProjectFiles = (data: ApiResponse, projectName: string): CodeFile[] => {
+  const files: CodeFile[] = [];
+  const { assistantOutput } = data;
+
+  // Always include raw data
+  files.push({
+    path: 'project_data.json',
+    content: JSON.stringify(data, null, 2)
+  });
+
+  if (assistantOutput.outputType === 'GENERATED_CODEBASE' && assistantOutput.codebase) {
+    const codebase = assistantOutput.codebase;
+    
+    // Add existing files from codebase
+    codebase.files.forEach(file => {
+      files.push({ path: file.path, content: file.content });
+    });
+
+    // Add generic README if not present
+    if (!codebase.files.find(f => f.path.toLowerCase() === 'readme.md')) {
+      const fallbackReadme = generateFallbackReadme(codebase.techStack, projectName, codebase.setupInstructions);
+      files.push({ path: 'README.md', content: fallbackReadme });
+    }
+
+    // Ensure EMBED_WIDGET has a demo index.html if missing
+    if (codebase.techStack === 'EMBED_WIDGET' && !codebase.files.find(f => f.path === 'index.html')) {
+      const demoHtml = generateWidgetDemoHtml(projectName);
+      files.push({ path: 'index.html', content: demoHtml });
+    }
+
+    // Ensure NEXT_JS has a package.json if missing (critical for Vercel)
+    if (codebase.techStack === 'NEXT_JS' && !codebase.files.find(f => f.path === 'package.json')) {
+      files.push({ 
+        path: 'package.json', 
+        content: JSON.stringify({
+          name: projectName.toLowerCase().replace(/\s+/g, '-'),
+          version: '0.1.0',
+          private: true,
+          scripts: {
+            dev: "next dev",
+            build: "next build",
+            start: "next start",
+            lint: "next lint"
+          },
+          dependencies: {
+            "react": "^18",
+            "react-dom": "^18",
+            "next": "14.1.0"
+          }
+        }, null, 2) 
+      });
+    }
+
+  } else if (assistantOutput.outputType === 'AUTOMATED_BUILD_PACKAGE' && assistantOutput.package) {
+    const pkg = assistantOutput.package;
+    
+    // Generate README
+    files.push({ path: 'README.md', content: generatePackageReadme(pkg, projectName) });
+
+    // Generate HTML Site
+    files.push({ path: 'index.html', content: generateHtmlSite(pkg, projectName) });
+
+    // Generate CSS
+    files.push({ path: 'styles.css', content: generateCss(pkg) });
+
+    // Generate robots.txt
+    files.push({ path: 'robots.txt', content: 'User-agent: *\nAllow: /' });
+
+  } else if (assistantOutput.outputType === 'STRATEGIC_ADVISORY_REPORT' && assistantOutput.report) {
+    const report = assistantOutput.report;
+    files.push({ path: 'README.md', content: generateReportReadme(report, projectName) });
+  }
+
+  return files;
+};
 
 export const downloadProjectZip = async (data: ApiResponse, projectName: string) => {
   const zip = new JSZip();
@@ -10,56 +90,13 @@ export const downloadProjectZip = async (data: ApiResponse, projectName: string)
 
   if (!root) return;
 
-  // Add Raw Data to root for project preservation
-  root.file('project_data.json', JSON.stringify(data, null, 2));
+  // Generate all files
+  const projectFiles = generateProjectFiles(data, projectName);
 
-  const { assistantOutput } = data;
-
-  if (assistantOutput.outputType === 'GENERATED_CODEBASE' && assistantOutput.codebase) {
-    const codebase = assistantOutput.codebase;
-    
-    // Add all files from the codebase
-    codebase.files.forEach(file => {
-      root.file(file.path, file.content);
-    });
-
-    // Add generic README if not present
-    if (!codebase.files.find(f => f.path.toLowerCase() === 'readme.md')) {
-      const fallbackReadme = generateFallbackReadme(codebase.techStack, projectName, codebase.setupInstructions);
-      root.file('README.md', fallbackReadme);
-    }
-
-    // Ensure EMBED_WIDGET has a demo index.html if missing
-    if (codebase.techStack === 'EMBED_WIDGET' && !codebase.files.find(f => f.path === 'index.html')) {
-      const demoHtml = generateWidgetDemoHtml(projectName);
-      root.file('index.html', demoHtml);
-    }
-
-  } else if (assistantOutput.outputType === 'AUTOMATED_BUILD_PACKAGE' && assistantOutput.package) {
-    const pkg = assistantOutput.package;
-    
-    // Generate README
-    const readmeContent = generatePackageReadme(pkg, projectName);
-    root.file('README.md', readmeContent);
-
-    // Generate HTML Site
-    const htmlContent = generateHtmlSite(pkg, projectName);
-    root.file('index.html', htmlContent);
-
-    // Generate CSS
-    const cssContent = generateCss(pkg);
-    root.file('styles.css', cssContent);
-
-    // Generate robots.txt
-    root.file('robots.txt', 'User-agent: *\nAllow: /');
-
-  } else if (assistantOutput.outputType === 'STRATEGIC_ADVISORY_REPORT' && assistantOutput.report) {
-    const report = assistantOutput.report;
-    
-    // Generate README for Report
-    const readmeContent = generateReportReadme(report, projectName);
-    root.file('README.md', readmeContent);
-  }
+  // Add files to zip
+  projectFiles.forEach(file => {
+    root.file(file.path, file.content);
+  });
 
   // Generate ZIP
   const content = await zip.generateAsync({ type: 'blob' });
@@ -210,6 +247,11 @@ ${report.seoAndPreLaunchChecklist.technicalGoLiveChecklist.map(i => `- [ ] ${i}`
 };
 
 export const generateHtmlSite = (pkg: AutomatedBuildPackage, name: string, embeddedCss?: string): string => {
+  // Try to find the hero image, fallback if missing
+  const heroImage = pkg.preliminaryBrandAssetPack.generatedImages?.find(
+    img => img.section.toLowerCase().includes('hero')
+  )?.imageUrl || 'https://placehold.co/1200x600/png?text=Hero+Background';
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -237,8 +279,9 @@ export const generateHtmlSite = (pkg: AutomatedBuildPackage, name: string, embed
             </div>
         </header>
 
-        <section class="hero parallax-bg">
-            <div class="container hero-container">
+        <section class="hero parallax-bg" style="background-image: url('${heroImage}'); position: relative;">
+            <div class="hero-overlay" style="position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(255,255,255,0.9), rgba(255,255,255,0.7)); z-index: 0;"></div>
+            <div class="container hero-container" style="position: relative; z-index: 1;">
                 <div class="hero-content animate-slide-up">
                     <h1 class="hero-title text-gradient">${pkg.aiCraftedStrategicCopy.valueProposition}</h1>
                     <p class="hero-subtitle">${pkg.aiCraftedStrategicCopy.missionStatement}</p>

@@ -4,19 +4,44 @@ import { generateVentureBuild } from './services/geminiService';
 import InputForm from './components/InputForm';
 import OutputDisplay from './components/OutputDisplay';
 import LandingPage from './components/LandingPage';
+import AuthDialog from './components/AuthDialog';
+import { supabase, isSupabaseConfigured } from './lib/supabase';
 import { FormData, ApiResponse, SavedProject } from './types';
-import { Box, Layers, Zap, Clock, FolderOpen, Trash2, ChevronRight, LogOut } from 'lucide-react';
+import { Box, Layers, Zap, Clock, FolderOpen, Trash2, ChevronRight, LogOut, User } from 'lucide-react';
 import { downloadProjectZip } from './services/exportService';
 
 const App: React.FC = () => {
-  const [hasAccess, setHasAccess] = useState(false);
+  const [session, setSession] = useState<any>(null);
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [result, setResult] = useState<ApiResponse | null>(null);
   const [currentProjectName, setCurrentProjectName] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [savedProjects, setSavedProjects] = useState<SavedProject[]>([]);
 
-  // Load saved projects from local storage on mount
+  useEffect(() => {
+    // Session Initialization Logic
+    if (isSupabaseConfigured) {
+      // Real Supabase Auth
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        setSession(session);
+      });
+
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        setSession(session);
+      });
+
+      return () => subscription.unsubscribe();
+    } else {
+      // Fallback: Demo Mode (LocalStorage)
+      const demoUser = localStorage.getItem('vb_demo_user');
+      if (demoUser) {
+        setSession({ user: { email: demoUser } });
+      }
+    }
+  }, []);
+
+  // Load saved projects
   useEffect(() => {
     const saved = localStorage.getItem('venture_build_saves');
     if (saved) {
@@ -26,22 +51,24 @@ const App: React.FC = () => {
         console.error("Failed to parse saved projects", e);
       }
     }
-    
-    // Check if user has previously "signed in" (optional, for now we show landing page on refresh to emulate a real site visit)
-    // const access = sessionStorage.getItem('vb_access');
-    // if (access) setHasAccess(true);
   }, []);
 
-  const handleGetStarted = () => {
-    setHasAccess(true);
-    // sessionStorage.setItem('vb_access', 'true');
-  };
-
-  const handleSignOut = () => {
-    setHasAccess(false);
+  const handleSignOut = async () => {
+    if (isSupabaseConfigured) {
+      await supabase.auth.signOut();
+    } else {
+      localStorage.removeItem('vb_demo_user');
+    }
+    setSession(null);
     setResult(null);
     setCurrentProjectName('');
-    // sessionStorage.removeItem('vb_access');
+  };
+
+  const handleLoginSuccess = (email: string) => {
+    // Called by AuthDialog when in Demo Mode
+    localStorage.setItem('vb_demo_user', email);
+    setSession({ user: { email } });
+    setIsAuthOpen(false);
   };
 
   const saveProjectToStorage = (project: SavedProject) => {
@@ -60,9 +87,8 @@ const App: React.FC = () => {
   const handleSave = () => {
     if (!result) return;
     
-    // Prompt user for a custom name for the saved project
     const nameInput = window.prompt("Enter a name for your saved project:", currentProjectName || 'Untitled Project');
-    if (nameInput === null) return; // User cancelled
+    if (nameInput === null) return; 
     
     const finalName = nameInput.trim() || 'Untitled Project';
 
@@ -114,9 +140,19 @@ const App: React.FC = () => {
     setCurrentProjectName('');
   };
 
-  // If user hasn't clicked "Get Started", show Landing Page
-  if (!hasAccess) {
-    return <LandingPage onGetStarted={handleGetStarted} />;
+  // --- Views ---
+
+  if (!session) {
+    return (
+      <>
+        <LandingPage onGetStarted={() => setIsAuthOpen(true)} />
+        <AuthDialog 
+          isOpen={isAuthOpen} 
+          onClose={() => setIsAuthOpen(false)} 
+          onLoginSuccess={handleLoginSuccess}
+        />
+      </>
+    );
   }
 
   // If result exists, show the output display
@@ -147,7 +183,7 @@ const App: React.FC = () => {
     );
   }
 
-  // Default Dashboard View
+  // Dashboard View
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-900 animate-fade-in">
       
@@ -161,9 +197,10 @@ const App: React.FC = () => {
             <span className="font-bold text-xl tracking-tight text-slate-900">Venture<span className="text-indigo-600">Build</span> AI</span>
           </div>
           <div className="flex items-center gap-4">
-             <div className="text-xs font-medium bg-indigo-50 text-indigo-700 px-3 py-1 rounded-full border border-indigo-100 hidden sm:block">
-              Pro Plan Active
-            </div>
+             <div className="flex items-center gap-2 text-sm text-slate-600">
+               <User className="w-4 h-4" />
+               <span className="hidden sm:inline">{session.user.email}</span>
+             </div>
             <button 
               onClick={handleSignOut}
               className="text-sm font-medium text-slate-500 hover:text-slate-800 transition"

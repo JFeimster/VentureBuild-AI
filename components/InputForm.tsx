@@ -1,6 +1,10 @@
 
 import React, { useState } from 'react';
-import { Plus, Trash2, Rocket, FileText, Sparkles, Wand2, Loader2, AlertCircle, Laptop, Code2, LayoutTemplate, BoxSelect, Palette, PenTool } from 'lucide-react';
+import { 
+  Plus, Trash2, Rocket, FileText, Sparkles, Wand2, Loader2, AlertCircle, 
+  Laptop, Code2, LayoutTemplate, BoxSelect, Palette, PenTool,
+  Briefcase, LayoutDashboard, Store, Bot, Filter, Users, Link, ShoppingBag, UserCircle
+} from 'lucide-react';
 import { FormData, TechStack, ProjectTheme } from '../types';
 import { generateProjectBrief } from '../services/geminiService';
 
@@ -82,16 +86,16 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading }) => {
     setFormData(prev => ({ ...prev, techStack: stack }));
   };
 
-  const themes: { value: ProjectTheme; label: string }[] = [
-    { value: 'AGENCY', label: 'Agency' },
-    { value: 'SAAS_DASHBOARD', label: 'OS / SaaS / Dashboard' },
-    { value: 'MARKETPLACE', label: 'Marketplace / Directory' },
-    { value: 'AI_TOOL_CATALOG', label: 'AI Tools & Catalogs' },
-    { value: 'FUNNEL_LANDER', label: 'Funnels / Landers' },
-    { value: 'CONTENT_MEMBERSHIP', label: 'Content / Membership' },
-    { value: 'LINK_IN_BIO', label: 'Link-in-Bio' },
-    { value: 'ECOMMERCE', label: 'Ecommerce' },
-    { value: 'PORTFOLIO', label: 'Portfolio' },
+  const themes: { value: ProjectTheme; label: string; icon: React.ElementType }[] = [
+    { value: 'AGENCY', label: 'Agency', icon: Briefcase },
+    { value: 'SAAS_DASHBOARD', label: 'SaaS / Dashboard', icon: LayoutDashboard },
+    { value: 'MARKETPLACE', label: 'Marketplace', icon: Store },
+    { value: 'AI_TOOL_CATALOG', label: 'AI Tools', icon: Bot },
+    { value: 'FUNNEL_LANDER', label: 'Funnel / Lander', icon: Filter },
+    { value: 'CONTENT_MEMBERSHIP', label: 'Membership', icon: Users },
+    { value: 'LINK_IN_BIO', label: 'Link-in-Bio', icon: Link },
+    { value: 'ECOMMERCE', label: 'Ecommerce', icon: ShoppingBag },
+    { value: 'PORTFOLIO', label: 'Portfolio', icon: UserCircle },
   ];
 
   return (
@@ -229,6 +233,31 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading }) => {
           </div>
         </div>
 
+        {/* Global Theme Selection - Now available for all modes */}
+        <div className="pt-4 border-t border-slate-200">
+          <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Project Theme & Industry</label>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            {themes.map((theme) => {
+              const Icon = theme.icon;
+              return (
+                <button
+                  key={theme.value}
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, theme: theme.value }))}
+                  className={`p-3 rounded-lg border text-xs font-bold text-left transition flex items-center gap-2 ${
+                    formData.theme === theme.value
+                      ? 'border-indigo-600 bg-indigo-50 text-indigo-700 shadow-sm'
+                      : 'border-slate-200 text-slate-600 hover:border-indigo-300 hover:bg-slate-50'
+                  }`}
+                >
+                  <Icon className={`w-4 h-4 shrink-0 ${formData.theme === theme.value ? 'text-indigo-600' : 'text-slate-400'}`} />
+                  {theme.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         <div className="pt-4 border-t border-slate-200">
           <label className="block text-sm font-medium text-slate-700 mb-3">Goal & Output Format</label>
           
@@ -286,28 +315,6 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading }) => {
           {formData.goal === 'GENERATE_CODE' && (
             <div className="animate-in fade-in slide-in-from-top-2 space-y-6">
               
-              {/* Theme Selection */}
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Website Theme & Purpose</label>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {themes.map((theme) => (
-                    <button
-                      key={theme.value}
-                      type="button"
-                      onClick={() => setFormData(prev => ({ ...prev, theme: theme.value }))}
-                      className={`p-3 rounded-lg border text-xs font-bold text-left transition flex items-center gap-2 ${
-                        formData.theme === theme.value
-                          ? 'border-indigo-600 bg-indigo-50 text-indigo-700'
-                          : 'border-slate-200 text-slate-600 hover:border-indigo-300'
-                      }`}
-                    >
-                      <Palette className="w-4 h-4 shrink-0" />
-                      {theme.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
               {/* Tech Stack Selection */}
               <div>
                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Tech Stack</label>

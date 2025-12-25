@@ -56,28 +56,70 @@ const BuildPackageView: React.FC<BuildPackageViewProps> = ({ data, codebase, onE
       const css = generateCss(data);
       return generateHtmlSite(data, "Live Content Preview", css);
     }
-    // Case 2: Codebase with explicit previewHtml
-    if (codebase?.previewHtml) {
+
+    if (!codebase) return "";
+
+    // Case 2: Codebase with explicit previewHtml (Best for immediate visual feedback)
+    if (codebase.previewHtml) {
       return codebase.previewHtml;
     }
-    // Case 3: Codebase with index.html in files
-    const indexFile = codebase?.files.find(f => f.path === 'index.html');
+
+    // Case 3: Codebase with index.html (Static Website)
+    const indexFile = codebase.files.find(f => f.path === 'index.html');
     if (indexFile) {
-      // In a real app, we'd need to link the CSS/JS blobs. 
-      // For this demo, we assume the AI either put CSS in <style> or used CDN.
-      // If there is a separated style.css, we try to inject it.
       let html = indexFile.content;
-      const cssFile = codebase?.files.find(f => f.path === 'style.css' || f.path === 'styles.css');
-      const jsFile = codebase?.files.find(f => f.path === 'script.js' || f.path === 'app.js');
+      // Inject CSS if found to ensure iframe renders styles correctly without external requests
+      const cssFile = codebase.files.find(f => f.path === 'styles.css' || f.path === 'style.css' || f.path.endsWith('.css'));
+      const jsFile = codebase.files.find(f => f.path === 'script.js' || f.path.endsWith('.js'));
       
       if (cssFile) {
-        html = html.replace('</head>', `<style>${cssFile.content}</style></head>`);
+        if (html.includes('</head>')) {
+          html = html.replace('</head>', `<style>${cssFile.content}</style></head>`);
+        } else {
+          html = `<style>${cssFile.content}</style>` + html;
+        }
       }
       if (jsFile) {
-        html = html.replace('</body>', `<script>${jsFile.content}</script></body>`);
+        if (html.includes('</body>')) {
+          html = html.replace('</body>', `<script>${jsFile.content}</script></body>`);
+        } else {
+          html = html + `<script>${jsFile.content}</script>`;
+        }
       }
       return html;
     }
+
+    // Case 4: Next.js App (app/page.tsx)
+    // Since we cannot run a Next.js build process in the browser iframe easily,
+    // we return a friendly placeholder explaining the state.
+    const pageFile = codebase.files.find(f => f.path === 'app/page.tsx' || f.path === 'pages/index.tsx');
+    if (pageFile) {
+      return `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <style>
+              body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 0; margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; background: #f8fafc; color: #334155; }
+              .container { text-align: center; background: white; padding: 3rem; border-radius: 16px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); max-width: 480px; }
+              h1 { font-size: 1.5rem; margin-bottom: 1rem; color: #0f172a; }
+              p { line-height: 1.6; margin-bottom: 2rem; color: #64748b; }
+              .badge { background: #000; color: white; padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; margin-bottom: 1rem; display: inline-block; }
+              .code-preview { background: #f1f5f9; padding: 1rem; border-radius: 8px; font-family: monospace; font-size: 0.8rem; text-align: left; margin-bottom: 1.5rem; color: #475569; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <span class="badge">Next.js Application</span>
+              <h1>Preview Not Available</h1>
+              <p>This is a server-side React application. It requires a build step to render interactively.</p>
+              <div class="code-preview">File: ${pageFile.path}<br/>Framework: Next.js / React</div>
+              <p style="font-size: 0.875rem;">To view this app, please use the <strong>Deploy</strong> button to launch on Vercel, or <strong>Download</strong> to run locally.</p>
+            </div>
+          </body>
+        </html>
+      `;
+    }
+
     return "";
   }, [data, codebase]);
 
@@ -508,7 +550,7 @@ const BuildPackageView: React.FC<BuildPackageViewProps> = ({ data, codebase, onE
               {data.preliminaryBrandAssetPack.generatedImages && data.preliminaryBrandAssetPack.generatedImages.length > 0 && (
                 <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-6">
                   {data.preliminaryBrandAssetPack.generatedImages.map((img, idx) => (
-                    <div key={idx} className="group relative rounded-lg overflow-hidden shadow-sm border border-slate-200">
+                    <div key={idx} className="group relative rounded-lg overflow-hidden shadow-sm border border-slate-200 bg-slate-100">
                       <img src={img.imageUrl} alt={img.section} className="w-full h-48 object-cover group-hover:scale-105 transition duration-500" />
                       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
                         <span className="text-xs font-bold text-white bg-indigo-600 px-2 py-1 rounded-full uppercase tracking-wider">{img.section}</span>

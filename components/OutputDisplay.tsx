@@ -1,19 +1,27 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { ApiResponse } from '../types';
 import BuildPackageView from './BuildPackageView';
 import AdvisoryReportView from './AdvisoryReportView';
-import { Download, Save, RefreshCw } from 'lucide-react';
+import DeployDialog from './DeployDialog';
+import GitHubDialog from './GitHubDialog';
+import { Download, Save, RefreshCw, CloudUpload, Github } from 'lucide-react';
 
 interface OutputDisplayProps {
   data: ApiResponse;
+  projectName: string;
   onReset: () => void;
   onSave: () => void;
   onDownload: () => void;
 }
 
-const OutputDisplay: React.FC<OutputDisplayProps> = ({ data, onReset, onSave, onDownload }) => {
+const OutputDisplay: React.FC<OutputDisplayProps> = ({ data, projectName, onReset, onSave, onDownload }) => {
   const { assistantOutput } = data;
+  const [isDeployDialogOpen, setIsDeployDialogOpen] = useState(false);
+  const [isGitHubDialogOpen, setIsGitHubDialogOpen] = useState(false);
+
+  // Helper to ensure we have a fallback name if projectName is empty
+  const safeProjectName = projectName || "venture-build-project";
 
   return (
     <div className="max-w-4xl mx-auto py-8 px-4">
@@ -28,13 +36,29 @@ const OutputDisplay: React.FC<OutputDisplayProps> = ({ data, onReset, onSave, on
             <Save className="w-4 h-4" />
             Save
           </button>
+
+          <button 
+            onClick={() => setIsGitHubDialogOpen(true)}
+            className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-slate-800 border border-slate-900 rounded-lg text-sm font-bold text-white hover:bg-slate-700 transition shadow-sm"
+          >
+            <Github className="w-4 h-4" />
+            Push
+          </button>
           
+          <button 
+            onClick={() => setIsDeployDialogOpen(true)}
+            className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-black border border-black rounded-lg text-sm font-bold text-white hover:bg-slate-800 transition shadow-sm"
+          >
+            <CloudUpload className="w-4 h-4" />
+            Deploy
+          </button>
+
           <button 
             onClick={onDownload}
             className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 rounded-lg text-sm font-bold text-white hover:bg-indigo-700 transition shadow-sm"
           >
             <Download className="w-4 h-4" />
-            Export Site
+            Export
           </button>
           
           <button 
@@ -58,6 +82,20 @@ const OutputDisplay: React.FC<OutputDisplayProps> = ({ data, onReset, onSave, on
       {assistantOutput.outputType === 'STRATEGIC_ADVISORY_REPORT' && assistantOutput.report && (
         <AdvisoryReportView data={assistantOutput.report} />
       )}
+
+      <DeployDialog 
+        isOpen={isDeployDialogOpen} 
+        onClose={() => setIsDeployDialogOpen(false)} 
+        data={data}
+        projectName={safeProjectName}
+      />
+
+      <GitHubDialog 
+        isOpen={isGitHubDialogOpen} 
+        onClose={() => setIsGitHubDialogOpen(false)} 
+        data={data}
+        projectName={safeProjectName}
+      />
     </div>
   );
 };
