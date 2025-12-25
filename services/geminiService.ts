@@ -90,6 +90,7 @@ export const generateVentureBuild = async (data: FormData): Promise<ApiResponse>
     config: {
       systemInstruction: SYSTEM_INSTRUCTION,
       responseMimeType: "application/json",
+      thinkingConfig: { thinkingBudget: 16000 }
     },
   });
 
@@ -148,16 +149,25 @@ export const getChatSession = (context?: string) => {
   const apiKey = process.env.API_KEY;
   const ai = new GoogleGenAI({ apiKey });
   
-  let systemPrompt = "You are an AI Venture Builder Assistant. You help entrepreneurs refine their business ideas, marketing strategies, and technical architectures. Be concise, strategic, and encouraging. Use bold formatting for emphasis.";
+  let systemPrompt = `You are the Venture AI Partner. You help entrepreneurs refine business ideas, marketing strategies, and technical architectures. 
+
+**YOUR OPERATING PRINCIPLES:**
+1. **Be Strategic**: Don't just answer questions; suggest "Blue Ocean" opportunities.
+2. **Be Actionable**: Provide specific technical steps or copywriting hooks.
+3. **Be Concise**: Entrepreneurs are busy. Use bolding and bullets.
+4. **Contextual Awareness**: If the user has a generated project, use its specific features and moat to give advice.
+
+**GOAL**: Guide the user from an idea to a high-ROI market launch.`;
   
   if (context) {
-    systemPrompt += `\n\nCURRENT PROJECT CONTEXT:\n${context}\n\nUse this data to provide specific, contextual advice for this venture. Focus on growth, conversion, and market positioning.`;
+    systemPrompt += `\n\nCURRENT PROJECT CONTEXT:\n${context}\n\nThis is the live venture data. Reference it to provide hyper-personalized advice.`;
   }
 
   return ai.chats.create({
     model: 'gemini-3-pro-preview',
     config: {
       systemInstruction: systemPrompt,
+      thinkingConfig: { thinkingBudget: 12000 }
     },
   });
 };
