@@ -4,13 +4,11 @@ import { ApiResponse, AutomatedBuildPackage, StrategicAdvisoryReport, GeneratedC
 
 /**
  * Prepares a flat array of files for the project, regardless of output type.
- * This is used by both the ZIP downloader and the Vercel deployer.
  */
 export const generateProjectFiles = (data: ApiResponse, projectName: string): CodeFile[] => {
   const files: CodeFile[] = [];
   const { assistantOutput } = data;
 
-  // Always include raw data
   files.push({
     path: 'project_data.json',
     content: JSON.stringify(data, null, 2)
@@ -18,62 +16,20 @@ export const generateProjectFiles = (data: ApiResponse, projectName: string): Co
 
   if (assistantOutput.outputType === 'GENERATED_CODEBASE' && assistantOutput.codebase) {
     const codebase = assistantOutput.codebase;
-    
-    // Add existing files from codebase
     codebase.files.forEach(file => {
       files.push({ path: file.path, content: file.content });
     });
 
-    // Add generic README if not present
     if (!codebase.files.find(f => f.path.toLowerCase() === 'readme.md')) {
       const fallbackReadme = generateFallbackReadme(codebase.techStack, projectName, codebase.setupInstructions);
       files.push({ path: 'README.md', content: fallbackReadme });
     }
-
-    // Ensure EMBED_WIDGET has a demo index.html if missing
-    if (codebase.techStack === 'EMBED_WIDGET' && !codebase.files.find(f => f.path === 'index.html')) {
-      const demoHtml = generateWidgetDemoHtml(projectName);
-      files.push({ path: 'index.html', content: demoHtml });
-    }
-
-    // Ensure NEXT_JS has a package.json if missing (critical for Vercel)
-    if (codebase.techStack === 'NEXT_JS' && !codebase.files.find(f => f.path === 'package.json')) {
-      files.push({ 
-        path: 'package.json', 
-        content: JSON.stringify({
-          name: projectName.toLowerCase().replace(/\s+/g, '-'),
-          version: '0.1.0',
-          private: true,
-          scripts: {
-            dev: "next dev",
-            build: "next build",
-            start: "next start",
-            lint: "next lint"
-          },
-          dependencies: {
-            "react": "^18",
-            "react-dom": "^18",
-            "next": "14.1.0"
-          }
-        }, null, 2) 
-      });
-    }
-
   } else if (assistantOutput.outputType === 'AUTOMATED_BUILD_PACKAGE' && assistantOutput.package) {
     const pkg = assistantOutput.package;
-    
-    // Generate README
     files.push({ path: 'README.md', content: generatePackageReadme(pkg, projectName) });
-
-    // Generate HTML Site
     files.push({ path: 'index.html', content: generateHtmlSite(pkg, projectName) });
-
-    // Generate CSS
     files.push({ path: 'styles.css', content: generateCss(pkg) });
-
-    // Generate robots.txt
     files.push({ path: 'robots.txt', content: 'User-agent: *\nAllow: /' });
-
   } else if (assistantOutput.outputType === 'STRATEGIC_ADVISORY_REPORT' && assistantOutput.report) {
     const report = assistantOutput.report;
     files.push({ path: 'README.md', content: generateReportReadme(report, projectName) });
@@ -84,24 +40,16 @@ export const generateProjectFiles = (data: ApiResponse, projectName: string): Co
 
 export const downloadProjectZip = async (data: ApiResponse, projectName: string) => {
   const zip = new JSZip();
-  // Sanitize folder name
   const folderName = projectName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
   const root = zip.folder(folderName);
-
   if (!root) return;
 
-  // Generate all files
   const projectFiles = generateProjectFiles(data, projectName);
-
-  // Add files to zip
   projectFiles.forEach(file => {
     root.file(file.path, file.content);
   });
 
-  // Generate ZIP
   const content = await zip.generateAsync({ type: 'blob' });
-  
-  // Trigger Download
   const url = window.URL.createObjectURL(content);
   const a = document.createElement('a');
   a.href = url;
@@ -112,159 +60,24 @@ export const downloadProjectZip = async (data: ApiResponse, projectName: string)
   document.body.removeChild(a);
 };
 
-export const generateWidgetDemoHtml = (name: string): string => {
-  return `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${name} - Widget Demo</title>
-    <meta name="description" content="Demo page for ${name} widget integration.">
-    <link rel="stylesheet" href="widget.css">
-    <style>
-        body { font-family: system-ui, -apple-system, sans-serif; padding: 0; margin: 0; background: #f8fafc; color: #334155; display: flex; flex-direction: column; min-height: 100vh; }
-        .header { background: #fff; padding: 1.5rem 2rem; border-bottom: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        .header h1 { margin: 0; font-size: 1.5rem; color: #0f172a; }
-        .container { max-width: 900px; margin: 3rem auto; padding: 0 1.5rem; flex: 1; }
-        .card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06); margin-bottom: 2rem; }
-        .instructions { background: #f0f9ff; padding: 1.5rem; border-radius: 8px; border: 1px solid #bae6fd; color: #0369a1; margin-bottom: 2rem; }
-        .code-block { background: #1e293b; color: #e2e8f0; padding: 1rem; border-radius: 6px; font-family: monospace; overflow-x: auto; margin-top: 0.5rem; }
-        .label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; margin-bottom: 0.5rem; display: block; }
-    </style>
-</head>
-<body>
-    <header class="header">
-        <h1>${name} Widget Integration</h1>
-    </header>
-
-    <div class="container">
-        <div class="instructions">
-            <h3 style="margin-top:0">Integration Instructions</h3>
-            <p>To add this widget to your site, simply include the CSS and JS files as shown below.</p>
-            
-            <div style="margin-top: 1rem;">
-                <span class="label">1. Add Stylesheet to &lt;head&gt;</span>
-                <div class="code-block">&lt;link rel="stylesheet" href="widget.css"&gt;</div>
-            </div>
-
-            <div style="margin-top: 1rem;">
-                <span class="label">2. Add Script to Body End</span>
-                <div class="code-block">&lt;script src="widget.js"&gt;&lt;/script&gt;</div>
-            </div>
-        </div>
-        
-        <span class="label">Live Preview</span>
-        <div class="card">
-            <p style="margin-bottom: 1.5rem; font-style: italic; color: #94a3b8;">The widget typically renders below or attaches to a specific element.</p>
-            
-            <!-- Widget Container Hook (Common pattern) -->
-            <div id="widget-root"></div>
-            <div class="widget-container"></div>
-            
-            <!-- Fallback text if widget fails -->
-            <noscript>Please enable JavaScript to view the widget.</noscript>
-        </div>
-    </div>
-
-    <!-- Integration Script -->
-    <script src="widget.js"></script>
-</body>
-</html>`;
-};
-
-export const generateFallbackReadme = (stack: string, name: string, instructions?: string): string => {
-  if (instructions) return instructions;
-
-  const baseHeader = `# ${name}\n\nGenerated by Venture Build AI.\n\n`;
-
-  switch (stack) {
-    case 'NEXT_JS':
-      return baseHeader + 
-        `## Getting Started\n\nThis is a Next.js project.\n\n` +
-        `1. Install dependencies:\n   \`\`\`bash\n   npm install\n   \`\`\`\n\n` +
-        `2. Run the development server:\n   \`\`\`bash\n   npm run dev\n   \`\`\`\n\n` +
-        `3. Open [http://localhost:3000](http://localhost:3000) with your browser.`;
-    
-    case 'STATIC_WEBSITE':
-      return baseHeader + 
-        `## Deployment\n\n` +
-        `You can deploy this static site easily using:\n` +
-        `- **Vercel**: Drag and drop the folder.\n` +
-        `- **Netlify**: Drag and drop the folder.\n` +
-        `- **GitHub Pages**: Push to a repository and enable Pages.\n\n` +
-        `## Local Development\n\nSimply open \`index.html\` in your browser.`;
-
-    case 'EMBED_WIDGET':
-      return baseHeader +
-        `## Implementation\n\n` +
-        `1. Include \`widget.css\` in your document head.\n` +
-        `2. Include \`widget.js\` at the end of your document body.\n` +
-        `3. Open \`index.html\` to see the live demo.`;
-      
-    default:
-      return baseHeader + `## Instructions\n\nRefer to the project files for implementation details.`;
-  }
-};
-
-export const generatePackageReadme = (pkg: AutomatedBuildPackage, name: string): string => {
-  return `# ${name} - Venture Build Package
-
-## Value Proposition
-${pkg.aiCraftedStrategicCopy.valueProposition}
-
-## Mission Statement
-${pkg.aiCraftedStrategicCopy.missionStatement}
-
-## Template Link
-${pkg.coreProjectFile.templateLink}
-
-## Key Features
-${pkg.aiCraftedStrategicCopy.featureBenefitDescriptions.map(f => `- **${f.featureName}**: ${f.benefitCopy}`).join('\n')}
-
-## Pricing
-${pkg.aiCraftedStrategicCopy.pricingTierBreakdown.map(t => `- **${t.tierName}** (${t.price}): ${t.features.join(', ')}`).join('\n')}
-
-## Brand Colors
-${pkg.preliminaryBrandAssetPack.curatedColorPalette.map(c => `- ${c.role}: ${c.hex}`).join('\n')}
-`;
-};
-
-export const generateReportReadme = (report: StrategicAdvisoryReport, name: string): string => {
-  return `# ${name} - Strategic Advisory Report
-
-## Executive Summary
-This report contains a comprehensive blueprint for launching your venture.
-
-## Section Strategy
-${report.sectionBySectionContentStrategy.map(s => `### ${s.sectionName}\nGoal: ${s.purposeAndGoalAnalysis}\n`).join('\n')}
-
-## Tech Stack
-${report.integrationAndTechStackBlueprint.essentialIntegrations.map(i => `- ${i.tool}: ${i.purpose}`).join('\n')}
-
-## Pre-Launch Checklist
-${report.seoAndPreLaunchChecklist.technicalGoLiveChecklist.map(i => `- [ ] ${i}`).join('\n')}
-`;
-};
-
 export const generateHtmlSite = (pkg: AutomatedBuildPackage, name: string, embeddedCss?: string): string => {
-  // Try to find the hero image, fallback if missing
   const heroImage = pkg.preliminaryBrandAssetPack.generatedImages?.find(
     img => img.section.toLowerCase().includes('hero')
-  )?.imageUrl || 'https://placehold.co/1200x600/png?text=Hero+Background';
+  )?.imageUrl || 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=1200';
 
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${name} - ${pkg.aiCraftedStrategicCopy.valueProposition.substring(0, 50)}...</title>
+    <title>${name} - Premium Solutions</title>
     <meta name="description" content="${pkg.aiCraftedStrategicCopy.missionStatement}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     ${embeddedCss ? `<style>${embeddedCss}</style>` : `<link rel="stylesheet" href="styles.css">`}
 </head>
-<body class="reveal-on-scroll">
+<body>
     <div class="wrapper">
         <header class="header glass-panel">
             <div class="container nav-container">
@@ -279,10 +92,10 @@ export const generateHtmlSite = (pkg: AutomatedBuildPackage, name: string, embed
             </div>
         </header>
 
-        <section class="hero parallax-bg" style="background-image: url('${heroImage}'); position: relative;">
-            <div class="hero-overlay" style="position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(255,255,255,0.9), rgba(255,255,255,0.7)); z-index: 0;"></div>
-            <div class="container hero-container" style="position: relative; z-index: 1;">
-                <div class="hero-content animate-slide-up">
+        <section class="hero parallax" style="--bg-image: url('${heroImage}');">
+            <div class="hero-overlay"></div>
+            <div class="container hero-container relative z-10">
+                <div class="hero-content reveal-on-scroll">
                     <h1 class="hero-title text-gradient">${pkg.aiCraftedStrategicCopy.valueProposition}</h1>
                     <p class="hero-subtitle">${pkg.aiCraftedStrategicCopy.missionStatement}</p>
                     <div class="cta-group">
@@ -296,13 +109,15 @@ export const generateHtmlSite = (pkg: AutomatedBuildPackage, name: string, embed
         <section id="features" class="section features">
             <div class="container">
                 <div class="section-header reveal-on-scroll">
-                    <span class="badge">Features</span>
-                    <h2>Why Choose ${name}</h2>
+                    <span class="badge">Innovation</span>
+                    <h2>Engineered for Excellence</h2>
                 </div>
                 <div class="grid">
                     ${pkg.aiCraftedStrategicCopy.featureBenefitDescriptions.map((f, i) => `
-                    <div class="card feature-card hover-lift" style="animation-delay: ${i * 100}ms">
-                        <div class="card-icon"></div>
+                    <div class="card feature-card hover-lift reveal-on-scroll" style="transition-delay: ${i * 150}ms">
+                        <div class="card-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+                        </div>
                         <h4>${f.featureName}</h4>
                         <p>${f.benefitCopy}</p>
                     </div>`).join('')}
@@ -310,15 +125,15 @@ export const generateHtmlSite = (pkg: AutomatedBuildPackage, name: string, embed
             </div>
         </section>
 
-        <section id="pricing" class="section pricing">
+        <section id="pricing" class="section pricing bg-slate-50/50">
             <div class="container">
                 <div class="section-header reveal-on-scroll">
                     <span class="badge">Pricing</span>
-                    <h2>Simple, Transparent Pricing</h2>
+                    <h2>Simple, High-Value Tiers</h2>
                 </div>
                 <div class="grid pricing-grid">
                     ${pkg.aiCraftedStrategicCopy.pricingTierBreakdown.map((t, i) => `
-                    <div class="card pricing-card hover-lift ${i === 1 ? 'featured' : ''}" style="animation-delay: ${i * 150}ms">
+                    <div class="card pricing-card hover-lift reveal-on-scroll ${i === 1 ? 'featured' : ''}" style="transition-delay: ${i * 200}ms">
                         ${i === 1 ? '<div class="popular-tag">Most Popular</div>' : ''}
                         <h4>${t.tierName}</h4>
                         <div class="price">${t.price}</div>
@@ -335,13 +150,13 @@ export const generateHtmlSite = (pkg: AutomatedBuildPackage, name: string, embed
             <div class="container">
                 <div class="footer-content">
                     <div class="footer-brand">
-                        <h3>${name}</h3>
-                        <p>&copy; ${new Date().getFullYear()} All rights reserved.</p>
+                        <h3 class="text-gradient">${name}</h3>
+                        <p>&copy; ${new Date().getFullYear()} Venture Build AI Partner.</p>
                     </div>
                     <div class="footer-links">
-                         <a href="#">Privacy</a>
-                         <a href="#">Terms</a>
-                         <a href="#">Contact</a>
+                         <a href="#" class="hover-underline">Privacy</a>
+                         <a href="#" class="hover-underline">Terms</a>
+                         <a href="#" class="hover-underline">Contact</a>
                     </div>
                 </div>
             </div>
@@ -349,7 +164,6 @@ export const generateHtmlSite = (pkg: AutomatedBuildPackage, name: string, embed
     </div>
     
     <script>
-      // Simple Intersection Observer for scroll animations
       document.addEventListener('DOMContentLoaded', () => {
         const observer = new IntersectionObserver((entries) => {
           entries.forEach(entry => {
@@ -357,11 +171,20 @@ export const generateHtmlSite = (pkg: AutomatedBuildPackage, name: string, embed
               entry.target.classList.add('is-visible');
             }
           });
-        }, { threshold: 0.15, rootMargin: '0px 0px -50px 0px' });
+        }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
 
-        document.querySelectorAll('.reveal-on-scroll, .card, .hero-content').forEach((el) => {
+        document.querySelectorAll('.reveal-on-scroll').forEach((el) => {
           observer.observe(el);
-          el.classList.add('animate-ready');
+        });
+
+        // Parallax Effect
+        window.addEventListener('scroll', () => {
+          const scrolled = window.pageYOffset;
+          const parallaxElements = document.querySelectorAll('.parallax');
+          parallaxElements.forEach(el => {
+            const speed = 0.5;
+            el.style.backgroundPositionY = (scrolled * speed) + 'px';
+          });
         });
       });
     </script>
@@ -373,26 +196,23 @@ export const generateCss = (pkg: AutomatedBuildPackage): string => {
   const colors = pkg.preliminaryBrandAssetPack.curatedColorPalette;
   const primary = colors.find(c => c.role.toLowerCase().includes('primary'))?.hex || '#4f46e5';
   const secondary = colors.find(c => c.role.toLowerCase().includes('secondary'))?.hex || '#818cf8';
-  const background = colors.find(c => c.role.toLowerCase().includes('background'))?.hex || '#f8fafc';
-  const text = colors.find(c => c.role.toLowerCase().includes('text'))?.hex || '#1e293b';
+  const background = colors.find(c => c.role.toLowerCase().includes('background'))?.hex || '#ffffff';
+  const text = colors.find(c => c.role.toLowerCase().includes('text'))?.hex || '#0f172a';
   
   return `
 :root {
     --primary: ${primary};
-    --primary-light: ${primary}20;
+    --primary-glow: ${primary}40;
     --secondary: ${secondary};
     --bg: ${background};
     --text: ${text};
-    --text-light: ${text}99;
+    --text-muted: ${text}99;
     --white: #ffffff;
-    --border: rgba(0,0,0,0.08);
-    --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
-    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
-    --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
-    --radius: 16px;
+    --radius: 20px;
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-* { box-sizing: border-box; }
+* { box-sizing: border-box; scroll-behavior: smooth; }
 
 body {
     font-family: 'Inter', sans-serif;
@@ -401,16 +221,14 @@ body {
     margin: 0;
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
-    overflow-x: hidden;
 }
 
-/* --- SOPHISTICATED ANIMATIONS --- */
+/* --- ADVANCED ANIMATIONS --- */
 
 .reveal-on-scroll {
     opacity: 0;
-    transform: translateY(40px);
-    transition: opacity 1s cubic-bezier(0.16, 1, 0.3, 1), transform 1s cubic-bezier(0.16, 1, 0.3, 1);
-    will-change: opacity, transform;
+    transform: translateY(30px);
+    transition: opacity 1s var(--ease), transform 1s var(--ease);
 }
 
 .reveal-on-scroll.is-visible {
@@ -418,25 +236,17 @@ body {
     transform: translateY(0);
 }
 
-.parallax-bg {
-    background-attachment: fixed;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-size: cover;
-    transform: translateZ(0);
-}
-
 .hover-lift {
-    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease;
+    transition: transform 0.4s var(--ease), box-shadow 0.4s var(--ease);
 }
 
 .hover-lift:hover {
-    transform: translateY(-8px) scale(1.01);
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    transform: translateY(-10px);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
 }
 
 .hover-scale {
-    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+    transition: transform 0.3s var(--ease);
 }
 
 .hover-scale:hover {
@@ -446,7 +256,6 @@ body {
 .glass-panel {
     background: rgba(255, 255, 255, 0.7);
     backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
     border: 1px solid rgba(255, 255, 255, 0.5);
 }
 
@@ -459,6 +268,8 @@ body {
 
 .hover-underline {
     position: relative;
+    text-decoration: none;
+    color: inherit;
 }
 
 .hover-underline::after {
@@ -468,32 +279,28 @@ body {
     height: 2px;
     bottom: -4px;
     left: 0;
-    background-color: var(--primary);
-    transition: width 0.3s ease;
+    background: var(--primary);
+    transition: width 0.3s var(--ease);
 }
 
 .hover-underline:hover::after {
     width: 100%;
 }
 
-/* --- LAYOUT --- */
+/* --- LAYOUT & COMPONENTS --- */
 
 .container {
-    max-width: 1100px;
+    max-width: 1200px;
     margin: 0 auto;
     padding: 0 24px;
 }
 
-/* Header */
 .header {
-    background: rgba(255,255,255,0.85);
-    backdrop-filter: blur(16px);
     position: sticky;
     top: 0;
-    z-index: 100;
-    border-bottom: 1px solid var(--border);
-    padding: 16px 0;
-    transition: all 0.3s ease;
+    z-index: 1000;
+    padding: 20px 0;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
 }
 
 .nav-container {
@@ -504,330 +311,200 @@ body {
 
 .logo {
     font-weight: 800;
-    font-size: 1.25rem;
-    color: var(--text);
-    letter-spacing: -0.025em;
-}
-
-.nav-links {
-    display: none;
-}
-
-@media (min-width: 768px) {
-    .nav-links {
-        display: flex;
-        gap: 32px;
-    }
-}
-
-.nav-links a {
-    text-decoration: none;
-    color: var(--text);
-    font-weight: 500;
-    font-size: 0.95rem;
-    transition: color 0.2s;
-}
-
-.nav-links a:hover {
-    color: var(--primary);
-}
-
-/* Buttons */
-.btn {
-    padding: 12px 24px;
-    border-radius: 12px;
-    text-decoration: none;
-    font-weight: 600;
-    font-size: 0.95rem;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
-    cursor: pointer;
-    border: none;
-}
-
-.btn-primary {
-    background-color: var(--primary);
-    color: var(--white);
-    box-shadow: 0 4px 12px ${primary}40;
-}
-
-.btn-primary:hover {
-    box-shadow: 0 8px 20px ${primary}60;
-}
-
-.btn-secondary {
-    background-color: var(--white);
-    color: var(--text);
-    border: 1px solid var(--border);
-}
-
-.btn-secondary:hover {
-    background-color: #f8fafc;
-    border-color: #cbd5e1;
-}
-
-.btn-outline {
-    background: transparent;
-    border: 2px solid var(--primary);
-    color: var(--primary);
-}
-
-.btn-outline:hover {
-    background: var(--primary-light);
-}
-
-.btn-lg {
-    padding: 16px 32px;
-    font-size: 1.1rem;
-}
-
-.full-width {
-    width: 100%;
-}
-
-/* Hero */
-.hero {
-    padding: 160px 0 120px;
-    text-align: center;
-    overflow: hidden;
-    position: relative;
-}
-
-.hero-title {
-    font-size: 3rem;
-    font-weight: 800;
-    line-height: 1.1;
-    margin-bottom: 24px;
+    font-size: 1.5rem;
     letter-spacing: -0.03em;
 }
 
-@media (min-width: 768px) {
-    .hero-title {
-        font-size: 4.5rem;
-    }
+.nav-links {
+    display: flex;
+    gap: 40px;
+}
+
+@media (max-width: 768px) {
+    .nav-links { display: none; }
+}
+
+.hero {
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+    background-image: var(--bg-image);
+    background-size: cover;
+}
+
+.hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to right, rgba(255,255,255,0.95), rgba(255,255,255,0.4));
+}
+
+.hero-title {
+    font-size: 4rem;
+    font-weight: 900;
+    line-height: 1.1;
+    margin-bottom: 24px;
+    letter-spacing: -0.04em;
 }
 
 .hero-subtitle {
     font-size: 1.25rem;
-    color: var(--text-light);
-    max-width: 650px;
-    margin: 0 auto 40px;
-    line-height: 1.6;
+    color: var(--text-muted);
+    max-width: 600px;
+    margin-bottom: 40px;
 }
 
 .cta-group {
     display: flex;
-    flex-direction: column;
-    gap: 16px;
+    gap: 20px;
+}
+
+.btn {
+    padding: 14px 32px;
+    border-radius: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
+    border: none;
+    cursor: pointer;
 }
 
-@media (min-width: 640px) {
-    .cta-group {
-        flex-direction: row;
-        gap: 24px;
-    }
+.btn-primary {
+    background: var(--primary);
+    color: white;
+    box-shadow: 0 10px 30px var(--primary-glow);
 }
 
-/* Sections */
-.section {
-    padding: 120px 0;
+.btn-secondary {
+    background: white;
+    color: var(--text);
+    border: 1px solid rgba(0,0,0,0.1);
 }
 
-.section-header {
-    text-align: center;
-    margin-bottom: 80px;
-}
+.btn-lg { padding: 18px 40px; font-size: 1.1rem; }
+
+.section { padding: 120px 0; }
+
+.section-header { text-align: center; margin-bottom: 80px; }
 
 .badge {
-    background: var(--primary-light);
+    background: var(--primary-glow);
     color: var(--primary);
-    font-size: 0.8rem;
-    font-weight: 700;
+    font-size: 0.75rem;
+    font-weight: 800;
     text-transform: uppercase;
     padding: 8px 16px;
-    border-radius: 30px;
+    border-radius: 100px;
+    margin-bottom: 20px;
     display: inline-block;
-    margin-bottom: 16px;
-    letter-spacing: 0.05em;
 }
 
-.section h2 {
-    font-size: 2.5rem;
-    font-weight: 700;
-    margin: 0;
-    letter-spacing: -0.02em;
-}
-
-/* Cards */
 .grid {
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 32px;
 }
 
-@media (min-width: 768px) {
-    .grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    .pricing-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
-}
-
 .card {
-    background: var(--white);
-    padding: 40px;
+    background: white;
+    padding: 48px;
     border-radius: var(--radius);
-    box-shadow: var(--shadow-sm);
-    border: 1px solid var(--border);
-    position: relative;
-    overflow: hidden;
-}
-
-.feature-card h4 {
-    font-size: 1.5rem;
-    margin: 0 0 16px;
-    font-weight: 700;
-}
-
-.feature-card p {
-    color: var(--text-light);
-    margin: 0;
-    line-height: 1.7;
+    border: 1px solid rgba(0,0,0,0.05);
 }
 
 .card-icon {
-    width: 64px;
-    height: 64px;
-    background: var(--primary-light);
-    border-radius: 20px;
-    margin-bottom: 24px;
+    width: 60px;
+    height: 60px;
+    background: var(--primary-glow);
+    color: var(--primary);
+    border-radius: 16px;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--primary);
-}
-
-/* Pricing */
-.pricing-card {
-    display: flex;
-    flex-direction: column;
+    margin-bottom: 32px;
 }
 
 .pricing-card.featured {
-    border: 2px solid var(--primary);
-    box-shadow: var(--shadow-lg);
-    transform: scale(1.02);
-    z-index: 10;
+    border: 3px solid var(--primary);
+    position: relative;
 }
 
 .popular-tag {
     position: absolute;
-    top: 20px;
-    right: 20px;
+    top: 24px;
+    right: 24px;
     background: var(--primary);
     color: white;
-    font-size: 0.75rem;
-    font-weight: 700;
-    padding: 6px 14px;
-    border-radius: 20px;
-    text-transform: uppercase;
-    box-shadow: 0 4px 10px ${primary}40;
+    font-size: 0.7rem;
+    padding: 6px 12px;
+    border-radius: 100px;
+    font-weight: 800;
 }
 
 .price {
     font-size: 3.5rem;
-    font-weight: 800;
-    color: var(--text);
-    margin: 16px 0 32px;
-    letter-spacing: -0.03em;
+    font-weight: 900;
+    margin-bottom: 32px;
 }
 
 .feature-list {
     list-style: none;
     padding: 0;
-    margin: 0 0 40px;
-    flex-grow: 1;
+    margin-bottom: 40px;
 }
 
 .feature-list li {
-    padding-left: 36px;
+    padding-left: 30px;
     position: relative;
-    margin-bottom: 18px;
-    color: var(--text-light);
-    font-size: 1rem;
+    margin-bottom: 16px;
+    color: var(--text-muted);
 }
 
-.feature-list li:before {
-    content: "✓";
+.feature-list li::before {
+    content: '→';
     position: absolute;
     left: 0;
-    width: 24px;
-    height: 24px;
-    background: var(--primary-light);
     color: var(--primary);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    font-size: 0.8rem;
+    font-weight: 900;
 }
 
-/* Footer */
 .footer {
-    padding: 100px 0;
-    border-top: 1px solid var(--border);
-    margin-top: 100px;
-    background: white;
+    padding: 80px 0;
+    border-top: 1px solid rgba(0,0,0,0.05);
 }
 
 .footer-content {
     display: flex;
-    flex-direction: column;
-    gap: 32px;
-    text-align: center;
+    justify-content: space-between;
+    align-items: center;
 }
 
-@media (min-width: 768px) {
-    .footer-content {
-        flex-direction: row;
-        justify-content: space-between;
-        align-items: center;
-        text-align: left;
-    }
-}
-
-.footer h3 {
-    margin: 0 0 8px;
-    font-size: 1.5rem;
-}
-
-.footer p {
-    color: var(--text-light);
-    margin: 0;
-    font-size: 0.95rem;
-}
-
-.footer-links {
-    display: flex;
-    gap: 32px;
-    justify-content: center;
-}
-
-.footer-links a {
-    color: var(--text-light);
-    text-decoration: none;
-    font-size: 0.95rem;
-    transition: color 0.2s;
-}
-
-.footer-links a:hover {
-    color: var(--primary);
+@media (max-width: 640px) {
+    .footer-content { flex-direction: column; text-align: center; gap: 40px; }
 }
 `;
+};
+
+export const generateFallbackReadme = (stack: string, name: string, instructions?: string): string => {
+  if (instructions) return instructions;
+  const baseHeader = `# ${name}\n\nGenerated by Venture Build AI Partner.\n\n`;
+  switch (stack) {
+    case 'NEXT_JS':
+      return baseHeader + `## Next.js Startup\n\n1. \`npm install\`\n2. \`npm run dev\``;
+    case 'STATIC_WEBSITE':
+      return baseHeader + `## Deployment\n\nDrag and drop the folder to Vercel/Netlify.`;
+    default:
+      return baseHeader + `## Instructions\n\nRefer to project files.`;
+  }
+};
+
+export const generatePackageReadme = (pkg: AutomatedBuildPackage, name: string): string => {
+  return `# ${name} - Strategy Pack\n\n## Value Prop\n${pkg.aiCraftedStrategicCopy.valueProposition}\n\n## Features\n${pkg.aiCraftedStrategicCopy.featureBenefitDescriptions.map(f => `- ${f.featureName}: ${f.benefitCopy}`).join('\n')}`;
+};
+
+export const generateReportReadme = (report: StrategicAdvisoryReport, name: string): string => {
+  return `# ${name} - Advisory\n\nGoal: Launch.\n\nIntegrations: ${report.integrationAndTechStackBlueprint.essentialIntegrations.map(i => i.tool).join(', ')}`;
 };

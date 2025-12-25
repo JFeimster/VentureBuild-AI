@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Copy, ExternalLink, Palette, Type, Image as ImageIcon, MessageSquare, Tag, Check, MousePointerClick, Download, Eye, LayoutTemplate, Code, FileCode, CheckCircle2, Files, Map, Lightbulb, Target } from 'lucide-react';
+import { Copy, ExternalLink, Palette, Type, Image as ImageIcon, MessageSquare, Tag, Check, MousePointerClick, Download, Eye, LayoutTemplate, Code, FileCode, CheckCircle2, Files, Map, Lightbulb, Target, ShieldCheck, Users, AlertCircle } from 'lucide-react';
 import { AutomatedBuildPackage, GeneratedCodebase } from '../types';
 import { generateHtmlSite, generateCss } from '../services/exportService';
 
@@ -13,24 +13,13 @@ interface BuildPackageViewProps {
 const BuildPackageView: React.FC<BuildPackageViewProps> = ({ data, codebase, onExport }) => {
   const [activeTab, setActiveTab] = useState<'strategy' | 'preview' | 'code' | 'blueprint'>('preview');
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
-  const [copiedAll, setCopiedAll] = useState(false);
   const [copiedFile, setCopiedFile] = useState(false);
 
-  // Set initial selected file if codebase exists
   useEffect(() => {
     if (codebase && codebase.files.length > 0 && !selectedFile) {
-      // Try to find index.html or page.tsx first
       const mainFile = codebase.files.find(f => f.path === 'index.html' || f.path === 'app/page.tsx');
       setSelectedFile(mainFile ? mainFile.path : codebase.files[0].path);
-      
-      // Default tab logic
-      if (codebase.siteSpec || codebase.wireframe) {
-        setActiveTab('blueprint');
-      } else if (codebase.previewHtml || codebase.files.some(f => f.path.endsWith('.html'))) {
-        setActiveTab('preview');
-      } else {
-        setActiveTab('code');
-      }
+      setActiveTab(codebase.previewHtml || codebase.files.some(f => f.path.endsWith('.html')) ? 'preview' : 'code');
     } else if (data) {
         setActiveTab('strategy');
     }
@@ -42,550 +31,146 @@ const BuildPackageView: React.FC<BuildPackageViewProps> = ({ data, codebase, onE
     setTimeout(() => setCopiedFile(false), 2000);
   };
 
-  const handleCopyAll = () => {
-    if (!codebase) return;
-    const allCode = codebase.files.map(f => `// --- File: ${f.path} ---\n${f.content}`).join('\n\n');
-    navigator.clipboard.writeText(allCode);
-    setCopiedAll(true);
-    setTimeout(() => setCopiedAll(false), 2000);
-  };
-
   const previewContent = React.useMemo(() => {
-    // Case 1: Template Content Data -> Generate HTML preview for the content
     if (data) {
       const css = generateCss(data);
       return generateHtmlSite(data, "Live Content Preview", css);
     }
-
     if (!codebase) return "";
+    if (codebase.previewHtml) return codebase.previewHtml;
 
-    // Case 2: Codebase with explicit previewHtml (Best for immediate visual feedback)
-    if (codebase.previewHtml) {
-      return codebase.previewHtml;
-    }
-
-    // Case 3: Codebase with index.html (Static Website)
     const indexFile = codebase.files.find(f => f.path === 'index.html');
     if (indexFile) {
       let html = indexFile.content;
-      // Inject CSS if found to ensure iframe renders styles correctly without external requests
       const cssFile = codebase.files.find(f => f.path === 'styles.css' || f.path === 'style.css' || f.path.endsWith('.css'));
       const jsFile = codebase.files.find(f => f.path === 'script.js' || f.path.endsWith('.js'));
-      
-      if (cssFile) {
-        if (html.includes('</head>')) {
-          html = html.replace('</head>', `<style>${cssFile.content}</style></head>`);
-        } else {
-          html = `<style>${cssFile.content}</style>` + html;
-        }
-      }
-      if (jsFile) {
-        if (html.includes('</body>')) {
-          html = html.replace('</body>', `<script>${jsFile.content}</script></body>`);
-        } else {
-          html = html + `<script>${jsFile.content}</script>`;
-        }
-      }
+      if (cssFile) html = html.replace('</head>', `<style>${cssFile.content}</style></head>`);
+      if (jsFile) html = html.replace('</body>', `<script>${jsFile.content}</script></body>`);
       return html;
     }
-
-    // Case 4: Next.js App (app/page.tsx)
-    // Since we cannot run a Next.js build process in the browser iframe easily,
-    // we return a friendly placeholder explaining the state.
-    const pageFile = codebase.files.find(f => f.path === 'app/page.tsx' || f.path === 'pages/index.tsx');
-    if (pageFile) {
-      return `
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <style>
-              body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 0; margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; background: #f8fafc; color: #334155; }
-              .container { text-align: center; background: white; padding: 3rem; border-radius: 16px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); max-width: 480px; }
-              h1 { font-size: 1.5rem; margin-bottom: 1rem; color: #0f172a; }
-              p { line-height: 1.6; margin-bottom: 2rem; color: #64748b; }
-              .badge { background: #000; color: white; padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; margin-bottom: 1rem; display: inline-block; }
-              .code-preview { background: #f1f5f9; padding: 1rem; border-radius: 8px; font-family: monospace; font-size: 0.8rem; text-align: left; margin-bottom: 1.5rem; color: #475569; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-            </style>
-          </head>
-          <body>
-            <div class="container">
-              <span class="badge">Next.js Application</span>
-              <h1>Preview Not Available</h1>
-              <p>This is a server-side React application. It requires a build step to render interactively.</p>
-              <div class="code-preview">File: ${pageFile.path}<br/>Framework: Next.js / React</div>
-              <p style="font-size: 0.875rem;">To view this app, please use the <strong>Deploy</strong> button to launch on Vercel, or <strong>Download</strong> to run locally.</p>
-            </div>
-          </body>
-        </html>
-      `;
-    }
-
     return "";
   }, [data, codebase]);
 
-  // Determine if we are in Codebase mode or Content Package mode
   const isCodeMode = !!codebase;
-
-  const getDownloadLabel = () => {
-    if (data) return "Download Copy & Strategy";
-    if (codebase?.techStack === 'NEXT_JS') return "Download Next.js App";
-    if (codebase?.techStack === 'EMBED_WIDGET') return "Download Widget";
-    return "Download Website";
-  };
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      {/* Hero Action */}
-      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl p-8 text-white shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6">
-        <div>
-          <h2 className="text-2xl font-bold mb-2">
-            {isCodeMode ? 'Application Built Successfully' : 'Template Copy Generated'}
+      <div className="bg-slate-950 rounded-2xl p-8 text-white shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6 border border-white/5 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-600/10 blur-[100px] rounded-full"></div>
+        <div className="relative z-10">
+          <h2 className="text-2xl font-black mb-2 flex items-center gap-3">
+            <CheckCircle2 className="w-7 h-7 text-indigo-400" />
+            {isCodeMode ? 'Venture Codebase Ready' : 'Strategic Strategy Package'}
           </h2>
-          <p className="text-indigo-100">
+          <p className="text-slate-400 font-medium">
             {isCodeMode 
-              ? `${codebase?.techStack.replace('_', ' ')} generated for ${codebase?.theme.replace('_', ' ')}. Download zip to deploy.` 
-              : 'Your strategic copy and assets for the selected template are ready.'}
+              ? `${codebase?.techStack.replace('_', ' ')} architecture for ${codebase?.theme.replace('_', ' ')}.` 
+              : 'Conversion-driven copy and branding assets assembled.'}
           </p>
         </div>
-        <div className="flex flex-col sm:flex-row gap-4">
-          <button 
-            onClick={onExport}
-            className="bg-indigo-700/50 hover:bg-indigo-700 text-white border border-white/10 px-6 py-3 rounded-lg font-bold flex items-center justify-center gap-2 transition shadow-lg whitespace-nowrap backdrop-blur-sm"
-          >
-            <Download className="w-5 h-5" />
-            {getDownloadLabel()}
-          </button>
-          {data && data.coreProjectFile.templateLink && (
-            <a 
-              href={data.coreProjectFile.templateLink} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="bg-white text-indigo-600 hover:bg-indigo-50 px-6 py-3 rounded-lg font-bold flex items-center justify-center gap-2 transition shadow-lg whitespace-nowrap"
-            >
-              <ExternalLink className="w-5 h-5" />
-              Open Template
-            </a>
-          )}
-        </div>
+        <button onClick={onExport} className="relative z-10 bg-indigo-600 hover:bg-indigo-500 text-white px-8 py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 transition shadow-xl hover:shadow-indigo-500/20">
+          <Download className="w-5 h-5" /> Download Zip
+        </button>
       </div>
 
-      {/* Tabs */}
       <div className="flex justify-center border-b border-slate-200">
-        <div className="flex gap-8 overflow-x-auto">
-          {!isCodeMode && (
-            <button
-              onClick={() => setActiveTab('strategy')}
-              className={`pb-4 px-2 text-sm font-bold flex items-center gap-2 transition border-b-2 whitespace-nowrap ${
-                activeTab === 'strategy' 
-                  ? 'text-indigo-600 border-indigo-600' 
-                  : 'text-slate-500 border-transparent hover:text-slate-800'
-              }`}
-            >
-              <LayoutTemplate className="w-4 h-4" />
-              Strategy & Content
-            </button>
-          )}
-
-          {isCodeMode && codebase?.wireframe && (
-             <button
-              onClick={() => setActiveTab('blueprint')}
-              className={`pb-4 px-2 text-sm font-bold flex items-center gap-2 transition border-b-2 whitespace-nowrap ${
-                activeTab === 'blueprint' 
-                  ? 'text-indigo-600 border-indigo-600' 
-                  : 'text-slate-500 border-transparent hover:text-slate-800'
-              }`}
-            >
-              <Map className="w-4 h-4" />
-              Blueprint & Spec
-            </button>
-          )}
-          
-          {(isCodeMode || data) && (
-             <button
-              onClick={() => setActiveTab('preview')}
-              className={`pb-4 px-2 text-sm font-bold flex items-center gap-2 transition border-b-2 whitespace-nowrap ${
-                activeTab === 'preview' 
-                  ? 'text-indigo-600 border-indigo-600' 
-                  : 'text-slate-500 border-transparent hover:text-slate-800'
-              }`}
-            >
-              <Eye className="w-4 h-4" />
-              Live Preview
-            </button>
-          )}
-
-          {isCodeMode && (
-            <button
-              onClick={() => setActiveTab('code')}
-              className={`pb-4 px-2 text-sm font-bold flex items-center gap-2 transition border-b-2 whitespace-nowrap ${
-                activeTab === 'code' 
-                  ? 'text-indigo-600 border-indigo-600' 
-                  : 'text-slate-500 border-transparent hover:text-slate-800'
-              }`}
-            >
-              <Code className="w-4 h-4" />
-              Code Viewer
-            </button>
-          )}
+        <div className="flex gap-10 overflow-x-auto">
+          {!isCodeMode && <TabButton active={activeTab === 'strategy'} onClick={() => setActiveTab('strategy')} icon={LayoutTemplate} label="Strategy" />}
+          {(isCodeMode || data) && <TabButton active={activeTab === 'preview'} onClick={() => setActiveTab('preview')} icon={Eye} label="Live Preview" />}
+          {isCodeMode && <TabButton active={activeTab === 'code'} onClick={() => setActiveTab('code')} icon={Code} label="Source Code" />}
         </div>
       </div>
 
-      {/* --- BLUEPRINT TAB --- */}
-      {activeTab === 'blueprint' && codebase && codebase.siteSpec && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Site Spec Column */}
-          <div className="col-span-1 space-y-6">
-            <div className="bg-slate-900 text-white p-6 rounded-xl shadow-lg">
-              <div className="flex items-center gap-2 mb-4 text-indigo-400 font-bold uppercase text-xs tracking-wider">
-                <Target className="w-4 h-4" />
-                Site Specification
-              </div>
-              <div className="space-y-4">
-                <div>
-                  <h4 className="font-bold text-white mb-1">Positioning</h4>
-                  <p className="text-slate-400 text-sm leading-relaxed">{codebase.siteSpec.positioning}</p>
-                </div>
-                <div>
-                  <h4 className="font-bold text-white mb-1">Target Audience</h4>
-                  <p className="text-slate-400 text-sm leading-relaxed">{codebase.siteSpec.targetAudience}</p>
-                </div>
-                <div>
-                  <h4 className="font-bold text-white mb-1">Main Promise</h4>
-                  <p className="text-slate-400 text-sm leading-relaxed">{codebase.siteSpec.mainPromise}</p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="bg-indigo-50 border border-indigo-100 p-6 rounded-xl">
-              <h3 className="text-indigo-900 font-bold flex items-center gap-2 mb-2">
-                <Lightbulb className="w-5 h-5" />
-                Theme: {codebase.theme.replace('_', ' ')}
-              </h3>
-              <p className="text-sm text-indigo-700">
-                This structure is optimized for high-conversion B2B and SaaS outcomes, focusing on clarity over creativity.
-              </p>
+      {activeTab === 'preview' && (
+        <div className="bg-slate-900 rounded-3xl overflow-hidden shadow-2xl border border-slate-800 ring-1 ring-white/10">
+          <div className="bg-slate-800 px-6 py-4 flex items-center gap-4 border-b border-slate-700">
+            <div className="flex gap-2"><div className="w-3 h-3 rounded-full bg-red-500"></div><div className="w-3 h-3 rounded-full bg-yellow-500"></div><div className="w-3 h-3 rounded-full bg-green-500"></div></div>
+            <div className="bg-slate-900/50 text-slate-400 text-xs px-6 py-2 rounded-lg flex-1 text-center font-mono border border-slate-700/50 flex items-center justify-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span> venture-builder-preview.localhost
             </div>
           </div>
+          <div className="bg-white w-full h-[850px] relative">
+            <iframe srcDoc={previewContent} className="w-full h-full border-0 absolute inset-0" title="Preview" />
+          </div>
+        </div>
+      )}
 
-          {/* Wireframe Column */}
-          <div className="col-span-1 lg:col-span-2">
-             <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-                <div className="px-6 py-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
-                  <h3 className="font-bold text-slate-700 flex items-center gap-2">
-                    <Map className="w-5 h-5 text-indigo-500" />
-                    Section-by-Section Wireframe
-                  </h3>
-                  <span className="text-xs bg-slate-200 text-slate-600 px-2 py-1 rounded font-mono">
-                    {codebase.wireframe?.length || 0} Sections
-                  </span>
-                </div>
-                <div className="divide-y divide-slate-100">
-                  {codebase.wireframe?.map((section, idx) => (
-                    <div key={idx} className="p-6 hover:bg-slate-50/50 transition">
-                      <div className="flex items-start justify-between gap-4 mb-2">
-                        <div>
-                          <span className="text-xs font-bold text-indigo-600 uppercase tracking-wide block mb-1">Section {idx + 1}: {section.sectionName}</span>
-                          <h4 className="font-bold text-slate-900 text-lg leading-tight">{section.headline}</h4>
-                        </div>
-                        <div className="shrink-0 bg-slate-100 text-slate-500 text-[10px] font-bold px-2 py-1 rounded uppercase">
-                          {section.purpose}
-                        </div>
+      {activeTab === 'strategy' && data && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="space-y-8">
+            <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8 space-y-6">
+              <h3 className="text-xl font-black text-slate-900 flex items-center gap-3"><Target className="w-6 h-6 text-indigo-600" /> Venture Foundation</h3>
+              <StrategyItem icon={AlertCircle} title="The Problem" content={data.aiCraftedStrategicCopy.strategicProblem || "Focusing on the high-friction points of your target audience."} />
+              <StrategyItem icon={Lightbulb} title="Core Solution" content={data.aiCraftedStrategicCopy.valueProposition} />
+              <StrategyItem icon={Users} title="Target Persona" content={data.aiCraftedStrategicCopy.targetPersona || "Specific high-value personas identified."} />
+              <StrategyItem icon={ShieldCheck} title="Competitive Moat" content={data.aiCraftedStrategicCopy.competitiveMoat || "The unique unfair advantage for your venture."} />
+            </div>
+            <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8">
+              <h3 className="text-xl font-black text-slate-900 mb-6 flex items-center gap-3"><Palette className="w-6 h-6 text-indigo-600" /> Visual Assets</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                 {data.preliminaryBrandAssetPack.generatedImages?.map((img, i) => (
+                   <div key={i} className="group relative rounded-2xl overflow-hidden border border-slate-100 bg-slate-50 transition hover:shadow-xl">
+                      <img src={img.imageUrl} alt={img.section} className="w-full h-40 object-cover transition duration-700 group-hover:scale-110" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-4">
+                         <span className="text-[10px] font-black text-white uppercase tracking-widest">{img.section}</span>
                       </div>
-                      
-                      {section.subheadOptions && section.subheadOptions.length > 0 && (
-                        <div className="mb-3">
-                           <p className="text-sm text-slate-600 italic">"{section.subheadOptions[0]}"</p>
-                        </div>
-                      )}
-                      
-                      <div className="flex flex-wrap gap-2 mt-3">
-                         {section.suggestedCTA && (
-                           <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-bold border border-indigo-100">
-                             <MousePointerClick className="w-3 h-3" /> CTA: {section.suggestedCTA}
-                           </span>
-                         )}
-                         {section.bulletPoints && section.bulletPoints.map((bp, bIdx) => (
-                            <span key={bIdx} className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-slate-100 text-slate-600 text-xs border border-slate-200">
-                              • {bp}
-                            </span>
-                         ))}
-                      </div>
-                    </div>
-                  ))}
+                   </div>
+                 ))}
+              </div>
+            </div>
+          </div>
+          <div className="space-y-8">
+             <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8">
+                <h3 className="text-xl font-black text-slate-900 mb-8 flex items-center gap-3"><MessageSquare className="w-6 h-6 text-indigo-600" /> Conversion Copy</h3>
+                <div className="space-y-6">
+                   {data.aiCraftedStrategicCopy.featureBenefitDescriptions.map((feat, idx) => (
+                     <div key={idx} className="bg-slate-50 p-6 rounded-2xl border border-slate-100 hover:bg-white transition duration-300">
+                        <div className="flex items-center gap-3 mb-2"><div className="w-2 h-2 rounded-full bg-indigo-500"></div><h4 className="font-black text-slate-900 text-sm uppercase tracking-tight">{feat.featureName}</h4></div>
+                        <p className="text-sm text-slate-600 leading-relaxed pl-5">{feat.benefitCopy}</p>
+                     </div>
+                   ))}
                 </div>
              </div>
           </div>
         </div>
       )}
 
-      {/* --- PREVIEW TAB --- */}
-      {activeTab === 'preview' && (
-        <div className="bg-slate-900 rounded-xl overflow-hidden shadow-2xl border border-slate-800 ring-1 ring-white/10">
-          <div className="bg-slate-800 px-4 py-3 flex items-center gap-4 border-b border-slate-700">
-            <div className="flex gap-1.5">
-              <div className="w-3 h-3 rounded-full bg-red-500/80 hover:bg-red-500 transition"></div>
-              <div className="w-3 h-3 rounded-full bg-yellow-500/80 hover:bg-yellow-500 transition"></div>
-              <div className="w-3 h-3 rounded-full bg-green-500/80 hover:bg-green-500 transition"></div>
-            </div>
-            <div className="bg-slate-900/50 text-slate-400 text-xs px-4 py-1.5 rounded-md flex-1 text-center font-mono border border-slate-700/50 flex items-center justify-center gap-2 select-none">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
-              localhost:3000
-            </div>
-          </div>
-          <div className="bg-white w-full h-[800px] relative">
-            {previewContent ? (
-               <iframe 
-                  srcDoc={previewContent}
-                  className="w-full h-full border-0 absolute inset-0"
-                  title="Site Preview"
-                  sandbox="allow-scripts allow-popups allow-modals"
-               />
-            ) : (
-              <div className="flex flex-col items-center justify-center h-full text-slate-400">
-                 <Eye className="w-12 h-12 mb-4 opacity-50" />
-                 <p>Preview not available for this tech stack.</p>
-                 <p className="text-sm mt-2">Please check the Code Viewer.</p>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* --- CODE VIEWER TAB --- */}
       {activeTab === 'code' && codebase && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 h-[700px]">
-           {/* File Tree */}
-           <div className="col-span-1 bg-white rounded-xl border border-slate-200 overflow-hidden flex flex-col">
-              <div className="p-4 bg-slate-50 border-b border-slate-200 font-bold text-sm text-slate-600">
-                Explorer
-              </div>
-              <div className="overflow-y-auto p-2 space-y-1 flex-1">
-                 {codebase.files.map((file) => (
-                   <button
-                    key={file.path}
-                    onClick={() => setSelectedFile(file.path)}
-                    className={`w-full text-left px-3 py-2 rounded-md text-sm flex items-center gap-2 transition ${
-                      selectedFile === file.path 
-                        ? 'bg-indigo-50 text-indigo-700 font-medium' 
-                        : 'text-slate-600 hover:bg-slate-50'
-                    }`}
-                   >
-                     <FileCode className="w-4 h-4" />
-                     {file.path}
-                   </button>
-                 ))}
-              </div>
+        <div className="bg-slate-950 rounded-3xl overflow-hidden h-[750px] flex border border-white/5 shadow-2xl">
+           <div className="w-72 bg-slate-900/50 border-r border-white/5 p-6 overflow-y-auto">
+              <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4">Files</p>
+              {codebase.files.map(f => (
+                <button key={f.path} onClick={() => setSelectedFile(f.path)} className={`w-full text-left px-4 py-2.5 rounded-xl text-xs font-mono transition mb-1.5 flex items-center gap-3 ${selectedFile === f.path ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
+                   <FileCode className="w-3.5 h-3.5" /> <span className="truncate">{f.path}</span>
+                </button>
+              ))}
            </div>
-
-           {/* Code Editor */}
-           <div className="col-span-3 bg-slate-900 rounded-xl border border-slate-800 overflow-hidden flex flex-col">
-              <div className="px-4 py-3 bg-slate-950 border-b border-slate-800 flex justify-between items-center">
-                 <span className="text-slate-400 font-mono text-xs">{selectedFile}</span>
-                 <div className="flex gap-2">
-                   <button 
-                      onClick={handleCopyAll}
-                      className="text-xs font-bold text-indigo-400 hover:text-indigo-300 flex items-center gap-1.5 bg-indigo-500/10 px-2 py-1 rounded border border-indigo-500/20"
-                   >
-                     {copiedAll ? <CheckCircle2 className="w-3 h-3" /> : <Files className="w-3 h-3" />}
-                     {copiedAll ? 'Copied All' : 'Copy All'}
-                   </button>
-                   <button 
-                      onClick={() => handleCopy(codebase.files.find(f => f.path === selectedFile)?.content || '')}
-                      className="text-xs text-slate-500 hover:text-white flex items-center gap-1"
-                   >
-                     {copiedFile ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                     {copiedFile ? 'Copied' : 'Copy'}
-                   </button>
-                 </div>
+           <div className="flex-1 flex flex-col bg-[#050510]">
+              <div className="px-6 py-4 bg-white/5 border-b border-white/5 flex justify-between items-center text-xs text-slate-400 font-mono">
+                 <div className="flex items-center gap-3"><Code className="w-4 h-4 text-indigo-400" /> {selectedFile}</div>
+                 <button onClick={() => handleCopy(codebase.files.find(f => f.path === selectedFile)?.content || '')} className="hover:text-white flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-lg transition">
+                    <Copy className="w-3.5 h-3.5" /> {copiedFile ? 'Copied!' : 'Copy'}
+                 </button>
               </div>
-              <div className="flex-1 overflow-auto p-4 custom-scrollbar">
-                 <pre className="font-mono text-sm text-indigo-100 leading-relaxed whitespace-pre-wrap">
-                   <code>
-                     {codebase.files.find(f => f.path === selectedFile)?.content || 'Select a file to view code.'}
-                   </code>
-                 </pre>
-              </div>
+              <div className="flex-1 overflow-auto p-8 font-mono text-sm text-indigo-100/90 leading-relaxed"><pre className="whitespace-pre-wrap">{codebase.files.find(f => f.path === selectedFile)?.content}</pre></div>
            </div>
         </div>
-      )}
-
-      {/* --- STRATEGY TAB (Legacy) --- */}
-      {activeTab === 'strategy' && data && (
-        <>
-          {/* Brand Assets */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Colors */}
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-              <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-                <Palette className="w-5 h-5 text-indigo-500" />
-                Curated Palette
-              </h3>
-              <div className="space-y-3">
-                {data.preliminaryBrandAssetPack.curatedColorPalette.map((color, idx) => (
-                  <div key={idx} className="flex items-center gap-4 group">
-                    <div 
-                      className="w-12 h-12 rounded-lg shadow-inner ring-1 ring-slate-100 shrink-0" 
-                      style={{ backgroundColor: color.hex }}
-                    ></div>
-                    <div>
-                      <p className="font-semibold text-slate-800">{color.role}</p>
-                      <p className="text-sm font-mono text-slate-500 group-hover:text-indigo-600 transition cursor-pointer flex items-center gap-1">
-                        {color.hex}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Fonts */}
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col">
-              <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-                <Type className="w-5 h-5 text-indigo-500" />
-                Typography Options
-              </h3>
-              <div className="flex-1 space-y-4">
-                {data.preliminaryBrandAssetPack.fontRecommendations.map((font, idx) => (
-                  <div key={idx} className={`rounded-lg border p-4 ${idx === 0 ? 'border-indigo-200 bg-indigo-50/20' : 'border-slate-200'}`}>
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-xs font-bold text-indigo-600 uppercase tracking-wider">Option {idx + 1}</span>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4 mb-3">
-                      <div>
-                        <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold block mb-1">Heading</span>
-                        <p className="text-xl font-bold text-slate-900 leading-none">{font.heading}</p>
-                      </div>
-                      <div>
-                        <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold block mb-1">Body</span>
-                        <p className="text-lg text-slate-700 leading-none">{font.body}</p>
-                      </div>
-                    </div>
-                    <p className="text-xs text-slate-500 italic border-t border-slate-100 pt-2 mt-2">
-                      "{font.justification}"
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Strategic Copy */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-            <div className="bg-slate-50 border-b border-slate-200 px-6 py-4">
-              <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                <MessageSquare className="w-5 h-5 text-indigo-500" />
-                Strategic Copywriting
-              </h3>
-            </div>
-            <div className="divide-y divide-slate-100">
-              <div className="p-6">
-                <h4 className="text-sm font-bold text-indigo-600 uppercase tracking-wide mb-2">Value Proposition</h4>
-                <p className="text-xl text-slate-800 font-medium leading-relaxed">{data.aiCraftedStrategicCopy.valueProposition}</p>
-              </div>
-
-              {/* Calls To Action Section */}
-              <div className="p-6">
-                <h4 className="text-sm font-bold text-indigo-600 uppercase tracking-wide mb-4 flex items-center gap-2">
-                  <MousePointerClick className="w-4 h-4" />
-                  Optimized Calls to Action
-                </h4>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                  {data.aiCraftedStrategicCopy.callsToAction.map((cta, idx) => (
-                    <div key={idx} className="flex flex-col gap-2">
-                      <div className="bg-slate-50 border border-slate-200 p-6 rounded-lg flex flex-col items-center justify-center text-center hover:border-indigo-300 transition group h-full relative overflow-hidden">
-                        <div className="absolute top-2 right-2 text-[10px] font-bold text-slate-300 group-hover:text-indigo-300 uppercase tracking-wider">{cta.location}</div>
-                        <button className="bg-indigo-600 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:bg-indigo-700 hover:shadow-lg transition transform hover:-translate-y-0.5 w-full">
-                          {cta.text}
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="p-6">
-                <h4 className="text-sm font-bold text-indigo-600 uppercase tracking-wide mb-4">Pricing Strategy</h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {data.aiCraftedStrategicCopy.pricingTierBreakdown.map((tier, idx) => (
-                    <div key={idx} className={`border rounded-lg p-5 transition flex flex-col h-full ${idx === 1 ? 'border-indigo-500 bg-indigo-50/30 ring-1 ring-indigo-500 relative' : 'border-slate-200 bg-slate-50 hover:border-indigo-300'}`}>
-                      {idx === 1 && <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-indigo-600 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-sm">Popular</div>}
-                      <div className="flex flex-col mb-4">
-                        <h5 className="font-bold text-slate-900 text-lg">{tier.tierName}</h5>
-                        <span className="text-2xl font-bold text-indigo-600 mt-1">{tier.price}</span>
-                      </div>
-                      <ul className="space-y-3 flex-1">
-                        {tier.features.map((feature, fIdx) => (
-                          <li key={fIdx} className="text-sm text-slate-600 flex items-start gap-2">
-                            <Check className="w-4 h-4 text-green-500 mt-0.5 shrink-0" />
-                            <span className="leading-tight">{feature}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="p-6">
-                <h4 className="text-sm font-bold text-indigo-600 uppercase tracking-wide mb-4">Feature Benefits</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {data.aiCraftedStrategicCopy.featureBenefitDescriptions.map((feat, idx) => (
-                    <div key={idx}>
-                      <h5 className="font-bold text-slate-900 mb-1">{feat.featureName}</h5>
-                      <p className="text-slate-600 text-sm">{feat.benefitCopy}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Image Briefs & Generated Images */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-              <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-                <ImageIcon className="w-5 h-5 text-indigo-500" />
-                Images & Visuals
-              </h3>
-              
-              {data.preliminaryBrandAssetPack.generatedImages && data.preliminaryBrandAssetPack.generatedImages.length > 0 && (
-                <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {data.preliminaryBrandAssetPack.generatedImages.map((img, idx) => (
-                    <div key={idx} className="group relative rounded-lg overflow-hidden shadow-sm border border-slate-200 bg-slate-100">
-                      <img src={img.imageUrl} alt={img.section} className="w-full h-48 object-cover group-hover:scale-105 transition duration-500" />
-                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
-                        <span className="text-xs font-bold text-white bg-indigo-600 px-2 py-1 rounded-full uppercase tracking-wider">{img.section}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <div className="space-y-4">
-                <h4 className="text-sm font-bold text-slate-600 uppercase tracking-wider mb-2">Prompt Briefs</h4>
-                {data.preliminaryBrandAssetPack.imageAndIconBriefs.map((img, idx) => (
-                  <div key={idx} className="flex gap-4 p-4 bg-slate-50 rounded-lg border border-slate-100 group relative">
-                    <div className="shrink-0 w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-bold text-sm">
-                      {idx + 1}
-                    </div>
-                    <div className="flex-1 pr-8">
-                      <h5 className="font-bold text-slate-900 text-sm mb-1">{img.section}</h5>
-                      <p className="text-slate-600 italic font-mono text-sm bg-white p-2 rounded border border-slate-100">"{img.brief}"</p>
-                    </div>
-                    <button 
-                      onClick={() => handleCopy(img.brief)}
-                      className="absolute top-4 right-4 text-slate-300 hover:text-indigo-600 transition"
-                      title="Copy Prompt"
-                    >
-                      <Copy className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-        </>
       )}
     </div>
   );
 };
+
+const TabButton: React.FC<{ active: boolean; onClick: () => void; icon: any; label: string }> = ({ active, onClick, icon: Icon, label }) => (
+  <button onClick={onClick} className={`pb-5 px-3 text-sm font-black flex items-center gap-3 transition-all border-b-4 uppercase tracking-widest ${active ? 'text-indigo-600 border-indigo-600' : 'text-slate-400 border-transparent hover:text-slate-700'}`}>
+    <Icon className="w-4.5 h-4.5" /> {label}
+  </button>
+);
+
+const StrategyItem: React.FC<{ icon: any; title: string; content: string }> = ({ icon: Icon, title, content }) => (
+  <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 flex gap-5">
+    <div className="w-12 h-12 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-indigo-600 flex-shrink-0 shadow-sm"><Icon className="w-6 h-6" /></div>
+    <div><h4 className="font-black text-xs text-slate-900 uppercase tracking-widest mb-1.5">{title}</h4><p className="text-sm text-slate-600 leading-relaxed">{content}</p></div>
+  </div>
+);
 
 export default BuildPackageView;

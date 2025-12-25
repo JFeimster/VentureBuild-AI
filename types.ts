@@ -12,20 +12,38 @@ export type ProjectTheme =
   | 'ECOMMERCE'
   | 'PORTFOLIO';
 
+export type MonetizationType = 'FREE' | 'FREEMIUM' | 'SUBSCRIPTION';
+export type SubscriptionType = 'SINGLE' | 'TIERED';
+export type BillingCycle = 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY' | 'ONE-TIME';
+
 export interface FormData {
   projectName: string;
-  coreConcept: string;
   brandName: string;
   brandVoice: string;
+  // Strategic Venture Fields
+  problemStatement: string;
+  coreConcept: string;
+  targetAudience: string;
+  unfairAdvantage: string;
+  competitors: string;
+  // Features & Action
   keyFeatures: string[];
   primaryCTA: string;
-  templateUrl: string; // Generalized from framerTemplateUrl
+  templateUrl: string;
   techStack: TechStack;
   theme: ProjectTheme;
   goal: OutputType;
+  // Monetization
+  monetization: MonetizationType;
+  subscriptionType: SubscriptionType;
+  price: string;
+  tierPrices: {
+    starter: string;
+    pro: string;
+    expert: string;
+  };
+  billingCycle: BillingCycle;
 }
-
-// --- Automated Build Package Types (Template Content) ---
 
 export interface ContentSection {
   headline?: string;
@@ -58,7 +76,7 @@ export interface PricingTier {
 }
 
 export interface ColorAsset {
-  role: string; // e.g., "Primary", "Background", "Text"
+  role: string;
   hex: string;
 }
 
@@ -80,7 +98,7 @@ export interface GeneratedImage {
 
 export interface AutomatedBuildPackage {
   coreProjectFile: {
-    templateLink: string; // Generalized
+    templateLink: string;
     structuredContentJson: Record<string, ContentSection | ContentSection[]>;
   };
   aiCraftedStrategicCopy: {
@@ -90,6 +108,10 @@ export interface AutomatedBuildPackage {
     socialProofTemplates: SocialProof[];
     pricingTierBreakdown: PricingTier[];
     missionStatement: string;
+    // New fields for deep strategy
+    strategicProblem?: string;
+    targetPersona?: string;
+    competitiveMoat?: string;
   };
   preliminaryBrandAssetPack: {
     curatedColorPalette: ColorAsset[];
@@ -98,8 +120,6 @@ export interface AutomatedBuildPackage {
     generatedImages: GeneratedImage[];
   };
 }
-
-// --- Generated Codebase Types (Static/Next/Widget) ---
 
 export interface SiteSpec {
   positioning: string;
@@ -117,7 +137,7 @@ export interface WireframeSection {
 }
 
 export interface CodeFile {
-  path: string; // e.g., "index.html", "styles/main.css"
+  path: string;
   content: string;
 }
 
@@ -128,10 +148,8 @@ export interface GeneratedCodebase {
   wireframe?: WireframeSection[];
   files: CodeFile[];
   setupInstructions: string;
-  previewHtml?: string; // For immediate rendering if applicable (usually index.html content)
+  previewHtml?: string;
 }
-
-// --- Strategic Advisory Report Types ---
 
 export interface SectionStrategy {
   sectionName: string;
@@ -177,12 +195,10 @@ export interface StrategicAdvisoryReport {
   };
 }
 
-// --- Union Type for API Response ---
-
 export interface AssistantOutput {
   outputType: 'AUTOMATED_BUILD_PACKAGE' | 'STRATEGIC_ADVISORY_REPORT' | 'GENERATED_CODEBASE';
-  package?: AutomatedBuildPackage; // Template Content support
-  codebase?: GeneratedCodebase;   // Code support
+  package?: AutomatedBuildPackage;
+  codebase?: GeneratedCodebase;
   report?: StrategicAdvisoryReport;
 }
 
