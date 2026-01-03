@@ -96,6 +96,14 @@ export interface GeneratedImage {
   imageUrl: string;
 }
 
+export interface LandingPageSection {
+  sectionName: string;
+  goal: string;
+  headline: string;
+  copy: string;
+  visualSuggestion: string;
+}
+
 export interface AutomatedBuildPackage {
   coreProjectFile: {
     templateLink: string;
@@ -112,6 +120,7 @@ export interface AutomatedBuildPackage {
     strategicProblem?: string;
     targetPersona?: string;
     competitiveMoat?: string;
+    landingPageWireframe: LandingPageSection[];
   };
   preliminaryBrandAssetPack: {
     curatedColorPalette: ColorAsset[];

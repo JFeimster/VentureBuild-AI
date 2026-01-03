@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Copy, ExternalLink, Palette, Type, Image as ImageIcon, MessageSquare, Tag, Check, MousePointerClick, Download, Eye, LayoutTemplate, Code, FileCode, CheckCircle2, Files, Map, Lightbulb, Target, ShieldCheck, Users, AlertCircle } from 'lucide-react';
+import { Copy, ExternalLink, Palette, Type, Image as ImageIcon, MessageSquare, Tag, Check, MousePointerClick, Download, Eye, LayoutTemplate, Code, FileCode, CheckCircle2, Files, Map, Lightbulb, Target, ShieldCheck, Users, AlertCircle, Sparkles, Wand2 } from 'lucide-react';
 import { AutomatedBuildPackage, GeneratedCodebase } from '../types';
 import { generateHtmlSite, generateCss } from '../services/exportService';
 
@@ -75,7 +75,10 @@ const BuildPackageView: React.FC<BuildPackageViewProps> = ({ data, codebase, onE
 
       <div className="flex justify-center border-b border-slate-200">
         <div className="flex gap-10 overflow-x-auto">
-          {!isCodeMode && <TabButton active={activeTab === 'strategy'} onClick={() => setActiveTab('strategy')} icon={LayoutTemplate} label="Strategy" />}
+          {!isCodeMode && <TabButton active={activeTab === 'strategy'} onClick={() => setActiveTab('strategy')} icon={Target} label="Market Strategy" />}
+          {data?.aiCraftedStrategicCopy.landingPageWireframe && (
+             <TabButton active={activeTab === 'blueprint'} onClick={() => setActiveTab('blueprint')} icon={LayoutTemplate} label="Venture Blueprint" />
+          )}
           {(isCodeMode || data) && <TabButton active={activeTab === 'preview'} onClick={() => setActiveTab('preview')} icon={Eye} label="Live Preview" />}
           {isCodeMode && <TabButton active={activeTab === 'code'} onClick={() => setActiveTab('code')} icon={Code} label="Source Code" />}
         </div>
@@ -132,6 +135,50 @@ const BuildPackageView: React.FC<BuildPackageViewProps> = ({ data, codebase, onE
                 </div>
              </div>
           </div>
+        </div>
+      )}
+
+      {activeTab === 'blueprint' && data?.aiCraftedStrategicCopy.landingPageWireframe && (
+        <div className="space-y-12">
+            <div className="max-w-3xl">
+                <h3 className="text-3xl font-black text-slate-900 mb-4 flex items-center gap-3">
+                    <Sparkles className="w-8 h-8 text-indigo-600" />
+                    Conversion Architecture
+                </h3>
+                <p className="text-slate-500 text-lg">Your high-fidelity landing page blueprint, architected for psychological conversion and market authority.</p>
+            </div>
+            
+            <div className="space-y-6">
+                {data.aiCraftedStrategicCopy.landingPageWireframe.map((section, idx) => (
+                    <div key={idx} className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden hover:shadow-xl transition duration-500 group">
+                        <div className="flex flex-col md:flex-row">
+                            <div className="md:w-64 bg-slate-50 p-8 border-r border-slate-100 flex flex-col justify-between">
+                                <div>
+                                    <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest block mb-2">Section {idx + 1}</span>
+                                    <h4 className="text-xl font-black text-slate-900">{section.sectionName}</h4>
+                                </div>
+                                <div className="mt-8">
+                                    <div className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Conversion Goal</div>
+                                    <div className="text-xs font-bold text-slate-600 bg-white border border-slate-200 rounded-lg px-3 py-2 leading-relaxed">
+                                        {section.goal}
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="flex-1 p-8 md:p-12">
+                                <h5 className="text-2xl font-black text-slate-900 mb-4 leading-tight">{section.headline}</h5>
+                                <p className="text-slate-600 leading-relaxed text-lg mb-8 max-w-2xl">{section.copy}</p>
+                                <div className="bg-indigo-50/50 rounded-2xl p-6 border border-indigo-100 flex items-start gap-4">
+                                    <ImageIcon className="w-6 h-6 text-indigo-600 shrink-0 mt-1" />
+                                    <div>
+                                        <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest block mb-1">Visual Directive</span>
+                                        <p className="text-sm text-indigo-900 font-medium italic">"{section.visualSuggestion}"</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                ))}
+            </div>
         </div>
       )}
 

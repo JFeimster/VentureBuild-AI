@@ -5,7 +5,7 @@ import BuildPackageView from './BuildPackageView';
 import AdvisoryReportView from './AdvisoryReportView';
 import DeployDialog from './DeployDialog';
 import GitHubDialog from './GitHubDialog';
-import { Download, Save, RefreshCw, CloudUpload, Github } from 'lucide-react';
+import { Download, Save, RefreshCw, CloudUpload, Github, AlertCircle } from 'lucide-react';
 
 interface OutputDisplayProps {
   data: ApiResponse;
@@ -16,12 +16,29 @@ interface OutputDisplayProps {
 }
 
 const OutputDisplay: React.FC<OutputDisplayProps> = ({ data, projectName, onReset, onSave, onDownload }) => {
-  const { assistantOutput } = data;
+  // Defensive check: ensure data and assistantOutput exist to prevent crashes
+  const assistantOutput = data?.assistantOutput;
+  
   const [isDeployDialogOpen, setIsDeployDialogOpen] = useState(false);
   const [isGitHubDialogOpen, setIsGitHubDialogOpen] = useState(false);
 
   // Helper to ensure we have a fallback name if projectName is empty
   const safeProjectName = projectName || "venture-build-project";
+
+  if (!assistantOutput) {
+    return (
+      <div className="max-w-4xl mx-auto py-20 px-6 text-center">
+        <div className="w-20 h-20 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-8">
+          <AlertCircle className="w-10 h-10" />
+        </div>
+        <h2 className="text-2xl font-black text-slate-900 mb-4">Strategic Data Missing</h2>
+        <p className="text-slate-500 mb-10 max-w-md mx-auto">The neural engine returned a malformed response. Please try refining your brief and generating again.</p>
+        <button onClick={onReset} className="bg-indigo-600 text-white px-8 py-3 rounded-xl font-bold flex items-center justify-center gap-2 mx-auto">
+          <RefreshCw className="w-5 h-5" /> Back to Builder
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto py-8 px-4">
