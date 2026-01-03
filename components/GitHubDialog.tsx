@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { X, Github, Lock, ExternalLink, Loader2, CheckCircle, AlertTriangle, HelpCircle, Info, Copy } from 'lucide-react';
+import { X, Github, Lock, ExternalLink, Loader2, CheckCircle, AlertTriangle, Info, ShieldCheck, Zap, FolderPlus } from 'lucide-react';
 import { createGitHubRepo, pushFilesToGitHub } from '../services/githubService';
 import { generateProjectFiles } from '../services/exportService';
 import { ApiResponse } from '../types';
@@ -23,6 +23,8 @@ const GitHubDialog: React.FC<GitHubDialogProps> = ({ isOpen, onClose, data, proj
   useEffect(() => {
     if (isOpen) {
       setRepoName(projectName.toLowerCase().replace(/[^a-z0-9-]/g, '-').substring(0, 50));
+      const saved = localStorage.getItem('github_token');
+      if (saved) setToken(saved);
     }
   }, [projectName, isOpen]);
 
@@ -32,17 +34,22 @@ const GitHubDialog: React.FC<GitHubDialogProps> = ({ isOpen, onClose, data, proj
     e.preventDefault();
     if (!token || !repoName) return;
 
+    localStorage.setItem('github_token', token);
     setIsPushing(true);
     setError(null);
     setSuccessUrl(null);
-    setProgress('Initializing...');
+    setProgress('Authenticating...');
 
     try {
-      setProgress('Creating repository...');
+      setProgress('Provisioning Repository...');
       const repo = await createGitHubRepo(token, repoName);
+      
+      setProgress('Generating Codebase...');
       const files = generateProjectFiles(data, projectName);
-      setProgress(`Pushing ${files.length} files...`);
+      
+      setProgress(`Atomic Push: ${files.length} Files...`);
       await pushFilesToGitHub(token, repo.full_name.split('/')[0], repo.name, files);
+      
       setSuccessUrl(repo.html_url);
     } catch (err: any) {
       setError(err.message || 'Failed to push to GitHub.');
@@ -53,110 +60,146 @@ const GitHubDialog: React.FC<GitHubDialogProps> = ({ isOpen, onClose, data, proj
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden animate-scale-in">
-        <div className="bg-slate-950 px-6 py-4 border-b border-slate-900 flex justify-between items-center text-white">
-          <h3 className="font-bold flex items-center gap-2">
-            <Github className="w-5 h-5" />
-            Push to GitHub
-          </h3>
-          <button onClick={onClose} className="text-slate-400 hover:text-white transition">
-            <X className="w-5 h-5" />
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-sm animate-in fade-in duration-300">
+      <div className="relative w-full max-w-lg bg-white rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 border border-slate-200">
+        
+        {/* Header */}
+        <div className="bg-[#050510] px-8 py-10 flex justify-between items-center text-white relative">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 blur-3xl rounded-full"></div>
+          <div className="flex items-center gap-5 relative z-10">
+            <div className="w-14 h-14 rounded-2xl bg-white/10 flex items-center justify-center shadow-xl border border-white/10">
+               <Github className="w-8 h-8 text-white" />
+            </div>
+            <div>
+              <h3 className="font-black text-2xl tracking-tight leading-none">GitHub Push</h3>
+              <p className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em] mt-2">Source Code Integration</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-3 hover:bg-white/10 rounded-2xl transition text-slate-400 hover:text-white">
+            <X className="w-6 h-6" />
           </button>
         </div>
 
-        <div className="p-6">
+        <div className="p-8 md:p-10">
           {!successUrl ? (
-            <form onSubmit={handlePush} className="space-y-6">
-              <div className="bg-blue-50 border border-blue-100 rounded-lg p-4">
-                <div className="flex items-start gap-3">
-                  <Info className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
-                  <div className="text-sm text-blue-900">
-                    <p className="font-bold mb-1">Why do I need a token?</p>
-                    <p className="leading-relaxed text-blue-800 text-xs">
-                       Since this app runs in your browser, it cannot use your active GitHub login. You must provide a temporary <strong>Personal Access Token</strong> (Classic).
-                    </p>
+            <form onSubmit={handlePush} className="space-y-8">
+              <div className="bg-slate-50 border border-slate-100 rounded-2xl p-6 flex gap-5">
+                <Info className="w-10 h-10 text-slate-400 shrink-0" />
+                <div className="text-xs text-slate-600 leading-relaxed font-medium">
+                  <p className="font-black text-slate-900 mb-1">Developer Requirement</p>
+                  Create a Personal Access Token (PAT) with <code className="bg-slate-200 px-1.5 py-0.5 rounded border border-slate-300 text-slate-900">repo</code> scopes to allow us to create and push code to your account.
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                <div>
+                  <div className="flex justify-between items-center mb-3">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">
+                      Step 1: Authorization
+                    </label>
+                    <a 
+                      href="https://github.com/settings/tokens/new?scopes=repo&description=Venture+Build+AI+Push" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-[10px] font-black text-indigo-600 uppercase tracking-widest flex items-center gap-1.5 hover:underline"
+                    >
+                      New PAT <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
+                  <div className="relative group">
+                    <Lock className="absolute left-5 top-5 w-5 h-5 text-slate-300 group-focus-within:text-slate-900 transition" />
+                    <input 
+                      type="password" 
+                      value={token}
+                      onChange={(e) => setToken(e.target.value)}
+                      placeholder="Paste token (ghp_...)"
+                      className="w-full pl-14 pr-4 py-5 bg-slate-50 border border-slate-200 rounded-[1.2rem] focus:ring-8 focus:ring-slate-900/5 focus:border-slate-900 outline-none transition text-sm font-mono placeholder:font-sans"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">
+                    Step 2: Repository Identity
+                  </label>
+                  <div className="relative group">
+                    <FolderPlus className="absolute left-5 top-5 w-5 h-5 text-slate-300 group-focus-within:text-indigo-500 transition" />
+                    <input 
+                      type="text" 
+                      value={repoName}
+                      onChange={(e) => setRepoName(e.target.value)}
+                      placeholder="repository-name"
+                      className="w-full pl-14 pr-4 py-5 bg-slate-50 border border-slate-200 rounded-[1.2rem] focus:ring-8 focus:ring-indigo-500/5 focus:border-indigo-500 outline-none transition text-sm font-bold text-slate-700"
+                      required
+                    />
                   </div>
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-900 uppercase mb-2">Step 1: Generate Token</label>
-                <a 
-                   href="https://github.com/settings/tokens/new?scopes=repo&description=Venture+Build+AI+Export" 
-                   target="_blank" 
-                   rel="noopener noreferrer"
-                   className="flex items-center justify-between w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg hover:border-indigo-500 hover:ring-1 hover:ring-indigo-500 hover:bg-white transition group mb-2"
-                >
-                    <span className="text-sm font-bold text-slate-700 group-hover:text-indigo-600">Click here to generate token</span>
-                    <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-indigo-600" />
-                </a>
-                <div className="bg-slate-50 rounded-lg p-3 text-xs text-slate-600 space-y-1.5 border border-slate-100">
-                    <p className="font-medium text-slate-800 mb-1">Instructions:</p>
-                    <ol className="list-decimal list-inside space-y-1 ml-1">
-                        <li>Link opens "New personal access token" page.</li>
-                        <li>Scroll to bottom {"\u2192"} click green <strong>Generate token</strong>.</li>
-                        <li>Copy the code starting with <code className="bg-white px-1 rounded border border-slate-200 text-slate-800">ghp_</code>.</li>
-                    </ol>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-900 uppercase mb-2">Step 2: Paste Token</label>
-                <div className="relative">
-                    <Lock className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
-                    <input 
-                        type="password" 
-                        value={token}
-                        onChange={(e) => setToken(e.target.value)}
-                        placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
-                        className="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 outline-none transition text-sm font-mono"
-                        required
-                    />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-900 uppercase mb-2">Step 3: Name Repository</label>
-                <input 
-                    type="text" 
-                    value={repoName}
-                    onChange={(e) => setRepoName(e.target.value)}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 outline-none transition text-sm"
-                    required
-                />
-              </div>
-
               {error && (
-                <div className="bg-red-50 text-red-700 p-3 rounded-lg text-sm flex items-start gap-2 border border-red-100">
-                    <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
-                    <span>{error}</span>
+                <div className="bg-red-50 text-red-700 p-5 rounded-2xl text-xs flex items-start gap-4 border border-red-100 animate-in slide-in-from-top-2">
+                  <AlertTriangle className="w-5 h-5 shrink-0" />
+                  <span className="font-medium">{error}</span>
                 </div>
               )}
 
               <button 
                 type="submit"
                 disabled={isPushing || !token}
-                className="w-full bg-slate-900 text-white font-bold py-3.5 rounded-xl hover:bg-slate-800 transition disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full bg-slate-900 hover:bg-black text-white font-black py-6 rounded-[1.2rem] transition shadow-2xl disabled:opacity-50 flex items-center justify-center gap-4 group"
               >
-                {isPushing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Github className="w-4 h-4" />}
-                {isPushing ? progress : 'Create Repository'}
+                {isPushing ? (
+                    <>
+                        <Loader2 className="w-6 h-6 animate-spin text-indigo-400" />
+                        <span className="text-sm uppercase tracking-[0.2em]">{progress}</span>
+                    </>
+                ) : (
+                    <>
+                        <Zap className="w-6 h-6 text-yellow-400" />
+                        <span className="text-sm uppercase tracking-[0.2em]">Build & Push to GitHub</span>
+                    </>
+                )}
               </button>
             </form>
           ) : (
-            <div className="text-center py-6 space-y-6">
-               <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                 <CheckCircle className="w-10 h-10" />
+            <div className="text-center py-10 animate-in zoom-in-95 duration-500">
+               <div className="relative inline-block mb-10">
+                  <div className="absolute inset-0 bg-indigo-500 blur-3xl opacity-20 animate-pulse"></div>
+                  <div className="w-28 h-28 bg-indigo-50 text-indigo-600 rounded-[2.5rem] flex items-center justify-center relative z-10 shadow-inner border border-indigo-100">
+                    <CheckCircle className="w-14 h-14" />
+                  </div>
                </div>
-               <h4 className="font-bold text-2xl text-slate-900 mb-2">Success!</h4>
-               <div className="bg-slate-50 p-6 rounded-xl border border-slate-100">
-                  <a href={successUrl} target="_blank" rel="noopener noreferrer" className="bg-black text-white font-bold py-3 px-6 rounded-lg flex items-center justify-center gap-2 w-full mb-3">
-                    Open Repository <ExternalLink className="w-4 h-4" />
+               
+               <div className="mb-12">
+                  <h4 className="font-black text-3xl text-slate-900 mb-3 tracking-tight">Sync Complete!</h4>
+                  <p className="text-slate-500 font-medium leading-relaxed max-w-xs mx-auto text-sm">
+                    Your venture source code is now securely hosted on GitHub.
+                  </p>
+               </div>
+               
+               <div className="flex flex-col gap-4">
+                  <a 
+                    href={successUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="w-full bg-slate-900 text-white font-black py-6 px-8 rounded-[1.2rem] hover:bg-black transition flex items-center justify-center gap-4 text-sm uppercase tracking-[0.2em] shadow-xl"
+                  >
+                    View on GitHub <ExternalLink className="w-5 h-5" />
                   </a>
+                  <button 
+                    onClick={() => setSuccessUrl(null)}
+                    className="mt-6 text-xs font-black text-slate-400 hover:text-slate-900 uppercase tracking-widest underline decoration-slate-200 underline-offset-8 transition"
+                  >
+                    Sync to another repository
+                  </button>
                </div>
-               <button onClick={() => setSuccessUrl(null)} className="text-sm text-slate-400 underline">Push to another repo</button>
             </div>
           )}
+        </div>
+
+        <div className="bg-slate-50 px-8 py-5 border-t border-slate-100 text-[9px] text-slate-400 text-center font-black uppercase tracking-[0.3em] flex items-center justify-center gap-3">
+          <ShieldCheck className="w-4 h-4 text-emerald-500" /> Secure Transmission via Git Data API
         </div>
       </div>
     </div>

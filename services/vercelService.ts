@@ -4,8 +4,8 @@ import { CodeFile } from '../types';
 export interface VercelDeploymentResponse {
   id: string;
   name: string;
-  url: string; // The deployment URL (e.g. project-name.vercel.app)
-  inspectorUrl: string; // URL to inspect deployment in Vercel dashboard
+  url: string; 
+  inspectorUrl: string; 
   readyState: 'QUEUED' | 'BUILDING' | 'READY' | 'ERROR' | 'CANCELED';
   error?: {
     code: string;
@@ -13,6 +13,9 @@ export interface VercelDeploymentResponse {
   };
 }
 
+/**
+ * Deploys project files to Vercel using the Deployments API.
+ */
 export const deployToVercel = async (
   token: string, 
   projectFiles: CodeFile[], 
@@ -20,20 +23,20 @@ export const deployToVercel = async (
 ): Promise<VercelDeploymentResponse> => {
   
   // Transform CodeFiles to Vercel API format
-  // Vercel API expects { file: 'path', data: 'content' }
   const filesPayload = projectFiles.map(f => ({
     file: f.path,
     data: f.content
   }));
 
-  // Clean project name (Vercel requirements: max 100 chars, lowercase, alphanumeric, hyphens)
+  // Vercel requirements: max 100 chars, lowercase, alphanumeric, hyphens
   const safeProjectName = projectName
     .toLowerCase()
     .replace(/[^a-z0-9-]/g, '-')
     .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
     .substring(0, 99);
 
-  // Auto-detect framework for better build handling
+  // Detect framework
   const isNextJs = projectFiles.some(f => f.path === 'package.json' && f.content.includes('"next"'));
 
   try {
@@ -47,8 +50,6 @@ export const deployToVercel = async (
         name: safeProjectName || 'venture-build-project',
         files: filesPayload,
         projectSettings: {
-            // Basic settings to help Vercel auto-detect. 
-            // Explicitly setting nextjs helps avoid issues if auto-detection is ambiguous.
             framework: isNextJs ? 'nextjs' : null
         }
       })
@@ -56,16 +57,15 @@ export const deployToVercel = async (
 
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.error?.message || `Deployment failed with status: ${response.status}`);
+      throw new Error(errorData.error?.message || `Vercel API error: ${response.status}`);
     }
 
     const data = await response.json();
     
-    // Normalize response
     return {
       id: data.id,
       name: data.name,
-      url: `https://${data.url}`, // Vercel returns url without protocol
+      url: `https://${data.url}`,
       inspectorUrl: data.inspectorUrl,
       readyState: data.readyState
     };

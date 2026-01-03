@@ -7,6 +7,9 @@ interface GitHubRepo {
   full_name: string;
 }
 
+/**
+ * Creates a new private repository on GitHub.
+ */
 export const createGitHubRepo = async (token: string, name: string): Promise<GitHubRepo> => {
   try {
     const response = await fetch('https://api.github.com/user/repos', {
@@ -18,8 +21,8 @@ export const createGitHubRepo = async (token: string, name: string): Promise<Git
       },
       body: JSON.stringify({
         name,
-        private: true, // Default to private for safety
-        auto_init: true // Initialize with README to make pushing easier (creates a HEAD)
+        private: true,
+        auto_init: true // Initialize with README to create the main branch/HEAD
       })
     });
 
@@ -35,62 +38,85 @@ export const createGitHubRepo = async (token: string, name: string): Promise<Git
   }
 };
 
+/**
+ * Pushes multiple files to a GitHub repository in a single atomic commit.
+ * Uses the Git Data API: Blobs -> Tree -> Commit -> Ref
+ */
 export const pushFilesToGitHub = async (
   token: string, 
   owner: string, 
   repo: string, 
   files: CodeFile[]
 ) => {
-  // We use the REST API to create/update files. 
-  // NOTE: For a production app, the Git Data API (Tree/Commit) is better for batching,
-  // but for <20 files, sequential PUT requests are acceptable and easier to debug/implement client-side.
-  
-  // 1. Get the default branch (usually main)
-  const repoInfoRes = await fetch(`https://api.github.com/repos/${owner}/${repo}`, {
-     headers: { 'Authorization': `token ${token}` }
-  });
+  const headers = {
+    'Authorization': `token ${token}`,
+    'Accept': 'application/vnd.github.v3+json',
+    'Content-Type': 'application/json',
+  };
+
+  // 1. Get the latest commit SHA of the default branch
+  const repoInfoRes = await fetch(`https://api.github.com/repos/${owner}/${repo}`, { headers });
   const repoInfo = await repoInfoRes.json();
   const branch = repoInfo.default_branch || 'main';
 
-  for (const file of files) {
-    try {
-      // Check if file exists to get SHA (needed for update)
-      // This might fail if file doesn't exist, which is fine
-      let sha: string | undefined;
-      try {
-        const checkRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${file.path}`, {
-          headers: { 'Authorization': `token ${token}` }
-        });
-        if (checkRes.ok) {
-          const data = await checkRes.json();
-          sha = data.sha;
-        }
-      } catch (e) {
-        // ignore
-      }
+  const refRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/git/refs/heads/${branch}`, { headers });
+  const refData = await refRes.json();
+  const lastCommitSha = refData.object.sha;
 
-      // Convert content to Base64 (handle Unicode)
-      const contentBase64 = btoa(unescape(encodeURIComponent(file.content)));
+  // 2. Create Blobs for each file
+  const treeItems = await Promise.all(files.map(async (file) => {
+    const blobRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/git/blobs`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        content: btoa(unescape(encodeURIComponent(file.content))),
+        encoding: 'base64'
+      })
+    });
+    const blobData = await blobRes.json();
+    return {
+      path: file.path,
+      mode: '100644', // Normal file
+      type: 'blob',
+      sha: blobData.sha
+    };
+  }));
 
-      const putRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${file.path}`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `token ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message: `Add ${file.path} via Venture Build AI`,
-          content: contentBase64,
-          branch: branch,
-          sha: sha // Only included if file exists
-        })
-      });
+  // 3. Create a New Tree
+  const treeRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/git/trees`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      base_tree: lastCommitSha,
+      tree: treeItems
+    })
+  });
+  const treeData = await treeRes.json();
 
-      if (!putRes.ok) {
-        console.warn(`Failed to push ${file.path}`, await putRes.json());
-      }
-    } catch (err) {
-      console.error(`Error pushing file ${file.path}:`, err);
-    }
+  // 4. Create a New Commit
+  const commitRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/git/commits`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      message: '🚀 Automated build via Venture Build AI',
+      tree: treeData.sha,
+      parents: [lastCommitSha]
+    })
+  });
+  const commitData = await commitRes.json();
+
+  // 5. Update the Reference
+  const updateRefRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/git/refs/heads/${branch}`, {
+    method: 'PATCH',
+    headers,
+    body: JSON.stringify({
+      sha: commitData.sha,
+      force: true
+    })
+  });
+
+  if (!updateRefRes.ok) {
+    const err = await updateRefRes.json();
+    throw new Error(err.message || 'Failed to update branch reference');
   }
 };
